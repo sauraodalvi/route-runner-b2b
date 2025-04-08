@@ -1,27 +1,34 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2 } from "lucide-react";
+import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "@/hooks/use-toast";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval, parseISO } from "date-fns";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface RoutesListProps {
   status: "active" | "upcoming" | "completed" | "all";
+  searchQuery?: string;
+  dateRange?: DateRange;
 }
 
-export function RoutesList({ status }: RoutesListProps) {
+export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListProps) {
   // Mock data
-  const routes = [
+  const allRoutes = [
     {
       id: "TR-004-1234-12",
       routeNo: "Route 2",
-      date: "17 Apr 2023",
+      date: "2025-04-17",
       timeStart: "09:10 - 11:30",
       timeEnd: "11:15 - 01:30",
       status: "active",
@@ -34,7 +41,7 @@ export function RoutesList({ status }: RoutesListProps) {
     {
       id: "TR-004-1234-13",
       routeNo: "Route 3",
-      date: "17 Apr 2023",
+      date: "2025-04-18",
       timeStart: "10:15 - 12:45",
       timeEnd: "12:30 - 02:45",
       status: "upcoming",
@@ -47,7 +54,7 @@ export function RoutesList({ status }: RoutesListProps) {
     {
       id: "TR-004-1234-14",
       routeNo: "Route 4",
-      date: "17 Apr 2023",
+      date: "2025-04-15",
       timeStart: "11:25 - 01:55",
       timeEnd: "13:40 - 03:10",
       status: "completed",
@@ -60,7 +67,7 @@ export function RoutesList({ status }: RoutesListProps) {
     {
       id: "TR-004-1234-15",
       routeNo: "Route 5",
-      date: "17 Apr 2023",
+      date: "2025-04-21",
       timeStart: "13:30 - 03:45",
       timeEnd: "15:45 - 05:30",
       status: "active",
@@ -72,7 +79,41 @@ export function RoutesList({ status }: RoutesListProps) {
     },
   ];
 
-  const filteredRoutes = status === "all" ? routes : routes.filter(route => route.status === status);
+  const [routes, setRoutes] = useState(allRoutes);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [routeToDelete, setRouteToDelete] = useState<string | null>(null);
+
+  // Filter based on status, search query, and date range
+  useEffect(() => {
+    let filteredRoutes = allRoutes;
+    
+    // Filter by status
+    if (status !== "all") {
+      filteredRoutes = filteredRoutes.filter(route => route.status === status);
+    }
+    
+    // Filter by search query
+    if (searchQuery) {
+      filteredRoutes = filteredRoutes.filter(route => 
+        route.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        route.routeNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        route.assignedTeam.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    // Filter by date range
+    if (dateRange?.from && dateRange?.to) {
+      filteredRoutes = filteredRoutes.filter(route => {
+        const routeDate = parseISO(route.date);
+        return isWithinInterval(routeDate, {
+          start: dateRange.from,
+          end: dateRange.to,
+        });
+      });
+    }
+    
+    setRoutes(filteredRoutes);
+  }, [status, searchQuery, dateRange]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -100,13 +141,82 @@ export function RoutesList({ status }: RoutesListProps) {
     }
   };
 
-  if (filteredRoutes.length === 0) {
+  const handleViewRoute = (routeId: string) => {
+    toast({
+      title: "View Route",
+      description: `Viewing details for route ${routeId}`,
+    });
+  };
+
+  const handleEditRoute = (routeId: string) => {
+    toast({
+      title: "Edit Route",
+      description: `Editing route ${routeId}`,
+    });
+  };
+
+  const confirmDeleteRoute = (routeId: string) => {
+    setRouteToDelete(routeId);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteRoute = () => {
+    if (routeToDelete) {
+      setRoutes(routes.filter(route => route.id !== routeToDelete));
+      toast({
+        title: "Route Deleted",
+        description: `Route ${routeToDelete} has been deleted`,
+      });
+      setShowDeleteConfirm(false);
+      setRouteToDelete(null);
+    }
+  };
+
+  const handleChangeTeam = (routeId: string) => {
+    toast({
+      title: "Change Team",
+      description: `Changing team for route ${routeId}`,
+    });
+  };
+
+  const handleCancelTrip = (routeId: string) => {
+    toast({
+      title: "Trip Cancelled",
+      description: `Trip ${routeId} has been cancelled`,
+    });
+    // In a real app, we would update the status of the route
+  };
+
+  const handleMarkCompleted = (routeId: string) => {
+    setRoutes(routes.map(route => 
+      route.id === routeId ? { ...route, status: "completed" } : route
+    ));
+    toast({
+      title: "Trip Completed",
+      description: `Trip ${routeId} has been marked as completed`,
+    });
+  };
+
+  if (routes.length === 0) {
     return (
       <div className="text-center py-12 border rounded-lg">
         <p className="text-muted-foreground">No {status} routes found.</p>
       </div>
     );
   }
+
+  const formatDateDisplay = (dateString: string) => {
+    try {
+      const date = parseISO(dateString);
+      return new Intl.DateTimeFormat('en-US', {
+        day: 'numeric', 
+        month: 'short', 
+        year: 'numeric'
+      }).format(date);
+    } catch (e) {
+      return dateString; // Return the original string if parsing fails
+    }
+  };
 
   return (
     <div className="overflow-auto">
@@ -128,11 +238,11 @@ export function RoutesList({ status }: RoutesListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredRoutes.map((route) => (
+          {routes.map((route) => (
             <TableRow key={route.id} className="hover:bg-gray-50/50">
               <TableCell className="font-medium">{route.id}</TableCell>
               <TableCell>{route.routeNo}</TableCell>
-              <TableCell>{route.date}</TableCell>
+              <TableCell>{formatDateDisplay(route.date)}</TableCell>
               <TableCell>{route.timeStart}</TableCell>
               <TableCell>{route.timeEnd}</TableCell>
               <TableCell>
@@ -154,11 +264,19 @@ export function RoutesList({ status }: RoutesListProps) {
               <TableCell className="text-center">{route.rejectedSamples}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleViewRoute(route.id)}
+                  >
                     <Eye className="h-4 w-4" />
                     <span className="sr-only">View</span>
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    onClick={() => handleEditRoute(route.id)}
+                  >
                     <Edit className="h-4 w-4" />
                     <span className="sr-only">Edit</span>
                   </Button>
@@ -170,12 +288,41 @@ export function RoutesList({ status }: RoutesListProps) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Trip</DropdownMenuItem>
-                      <DropdownMenuItem>Change Team</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewRoute(route.id)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditRoute(route.id)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Trip
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleChangeTeam(route.id)}>
+                        <User className="h-4 w-4 mr-2" />
+                        Change Team
+                      </DropdownMenuItem>
                       {route.status !== "completed" && (
-                        <DropdownMenuItem>Cancel Trip</DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem onClick={() => handleMarkCompleted(route.id)}>
+                            <Check className="h-4 w-4 mr-2" />
+                            Mark as Completed
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleCancelTrip(route.id)}
+                          >
+                            Cancel Trip
+                          </DropdownMenuItem>
+                        </>
                       )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => confirmDeleteRoute(route.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete Route
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -184,6 +331,26 @@ export function RoutesList({ status }: RoutesListProps) {
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Route</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this route? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteRoute}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

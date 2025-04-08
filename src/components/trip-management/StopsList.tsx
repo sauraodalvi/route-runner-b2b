@@ -1,16 +1,18 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Clock, Building, Check, Phone, User } from "lucide-react";
+import { MapPin, Clock, Building, Check, Phone, User, Trash2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Stop } from "./CreateRouteForm";
 
 interface StopsListProps {
   stops: Stop[];
+  onDeleteStop?: (id: number) => void;
+  onEditStop?: (stop: Stop) => void;
 }
 
-export function StopsList({ stops }: StopsListProps) {
+export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
   if (stops.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground text-sm">
@@ -51,7 +53,7 @@ export function StopsList({ stops }: StopsListProps) {
                   )}
                 </div>
               </div>
-              <div className="text-right">
+              <div className="flex flex-col items-end">
                 <Badge variant={stop.type === "checkpoint" ? "secondary" : "default"} className="mb-1">
                   {stop.type === "checkpoint" ? 
                     <Check className="h-3 w-3 mr-1" /> : 
@@ -68,6 +70,30 @@ export function StopsList({ stops }: StopsListProps) {
                 {stop.organization && stop.type === "pickup" && (
                   <div className="text-xs text-muted-foreground mt-1">
                     {organizations.find(org => org.id === stop.organization)?.name}
+                  </div>
+                )}
+                {(onDeleteStop || onEditStop) && (
+                  <div className="mt-2 flex space-x-1">
+                    {onEditStop && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 w-6 p-0" 
+                        onClick={() => onEditStop(stop)}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {onDeleteStop && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                        onClick={() => onDeleteStop(stop.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

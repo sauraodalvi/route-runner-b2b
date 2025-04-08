@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { AddStopForm } from "./AddStopForm";
 import { toast } from "@/hooks/use-toast";
 
@@ -42,6 +42,9 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
   const [endAfterUnit, setEndAfterUnit] = useState("trips");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [pickupPartner, setPickupPartner] = useState("");
+  const [activeTab, setActiveTab] = useState("manual");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stopToEdit, setStopToEdit] = useState<Stop | null>(null);
   
   const dummyPartners = [
     { id: 1, name: "FastTrack Logistics" },
@@ -58,12 +61,36 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
   };
 
   const handleAddStop = (stop: Stop) => {
-    setStops([...stops, { ...stop, id: stops.length + 1 }]);
+    if (stopToEdit) {
+      // Update existing stop
+      setStops(stops.map(s => s.id === stopToEdit.id ? stop : s));
+      setStopToEdit(null);
+      toast({
+        title: "Stop updated successfully",
+        description: `${stop.name} has been updated`,
+      });
+    } else {
+      // Add new stop
+      setStops([...stops, { ...stop, id: Date.now() }]);
+      toast({
+        title: "Stop added successfully",
+        description: `${stop.name} has been added to the route`,
+      });
+    }
     setShowAddStopSheet(false);
+  };
+
+  const handleDeleteStop = (stopId: number) => {
+    setStops(stops.filter(stop => stop.id !== stopId));
     toast({
-      title: "Stop added successfully",
-      description: `${stop.name} has been added to the route`,
+      title: "Stop removed",
+      description: "The stop has been removed from the route",
     });
+  };
+
+  const handleEditStop = (stop: Stop) => {
+    setStopToEdit(stop);
+    setShowAddStopSheet(true);
   };
 
   const handleCreateRoute = () => {
@@ -103,10 +130,72 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
   };
 
   const handleDownloadTemplate = () => {
+    // In a real app, this would generate and download a CSV template
+    const csvContent = "Stop Name,Address,Type,Time,Organization,Contact Name,Contact Phone\nExample Hospital,123 Main St,pickup,09:00 AM,1,John Doe,555-123-4567\nCheckpoint 1,456 Park Ave,checkpoint,10:00 AM,,Jane Smith,555-987-6543";
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'route_stops_template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
       title: "Template downloaded",
       description: "CSV template has been downloaded to your device",
     });
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check if it's a CSV file
+    if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
+      toast({
+        title: "Invalid file format",
+        description: "Please upload a CSV file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // In a real app, we would parse the CSV file here
+    // For demo purposes, we'll simulate adding some stops
+    const mockStopsFromCsv = [
+      {
+        id: Date.now() + 1,
+        name: "Hospital A",
+        address: "123 Health St",
+        type: "pickup" as const,
+        time: "09:00 AM",
+        organization: "1",
+        contactName: "Dr. Smith",
+        contactPhone: "555-123-4567"
+      },
+      {
+        id: Date.now() + 2,
+        name: "Checkpoint B",
+        address: "456 Safety Rd",
+        type: "checkpoint" as const,
+        time: "10:30 AM",
+        contactName: "Security Team",
+        contactPhone: "555-987-6543"
+      }
+    ];
+
+    setStops([...stops, ...mockStopsFromCsv]);
+    
+    toast({
+      title: "Stops imported successfully",
+      description: `${mockStopsFromCsv.length} stops have been added from the file`,
+    });
+
+    // Clear the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   return (
@@ -128,6 +217,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
+                  id="startDate"
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal",
@@ -156,6 +246,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
               defaultValue="one-time" 
               className="pt-2"
               onValueChange={setFrequencyType}
+              value={frequencyType}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="one-time" id="one-time" />
@@ -189,7 +280,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
                   onChange={(e) => setEndAfter(e.target.value)}
                 />
                 <Select value={endAfterUnit} onValueChange={setEndAfterUnit}>
-                  <SelectTrigger>
+                  <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
                   <SelectContent>
@@ -241,7 +332,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
         <div className="space-y-4">
           <div>
             <Label className="mb-2 block">Add Stops to Route</Label>
-            <Tabs defaultValue="manual">
+            <Tabs defaultValue="manual" value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="manual">Add Manually</TabsTrigger>
                 <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
@@ -249,17 +340,36 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
               <TabsContent value="manual" className="pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-medium">Stops ({stops.length})</span>
-                  <Button size="sm" variant="outline" onClick={() => setShowAddStopSheet(true)}>
+                  <Button size="sm" variant="outline" onClick={() => {
+                    setStopToEdit(null);
+                    setShowAddStopSheet(true);
+                  }}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Stop
                   </Button>
                 </div>
-                <StopsList stops={stops} />
+                <StopsList 
+                  stops={stops} 
+                  onDeleteStop={handleDeleteStop}
+                  onEditStop={handleEditStop}
+                />
               </TabsContent>
               <TabsContent value="bulk" className="pt-4">
                 <div className="text-center p-8 border-2 border-dashed rounded-lg">
-                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                  <p className="text-sm font-medium">Drop CSV file here or click to upload</p>
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    accept=".csv"
+                    className="hidden" 
+                    onChange={handleFileUpload}
+                  />
+                  <Upload 
+                    className="h-8 w-8 mx-auto mb-2 text-muted-foreground" 
+                    onClick={() => fileInputRef.current?.click()}
+                  />
+                  <p className="text-sm font-medium cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    Drop CSV file here or click to upload
+                  </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Download template and fill with stop details
                   </p>
@@ -268,6 +378,18 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
                     Download Template
                   </Button>
                 </div>
+                {stops.length > 0 && (
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium">Stops ({stops.length})</span>
+                    </div>
+                    <StopsList 
+                      stops={stops} 
+                      onDeleteStop={handleDeleteStop} 
+                      onEditStop={handleEditStop}
+                    />
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
@@ -275,6 +397,11 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
             <div className="text-center">
               <Map className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Map view will display stops here</p>
+              {stops.length > 0 && (
+                <span className="text-xs block mt-1">
+                  {stops.length} {stops.length === 1 ? 'stop' : 'stops'} added
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -285,15 +412,29 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
         <Button onClick={handleCreateRoute}>Create Route</Button>
       </div>
 
-      <Sheet open={showAddStopSheet} onOpenChange={setShowAddStopSheet}>
+      <Sheet 
+        open={showAddStopSheet} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setStopToEdit(null);
+          }
+          setShowAddStopSheet(open);
+        }}
+      >
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Add Stop to Route</SheetTitle>
+            <SheetTitle>{stopToEdit ? 'Edit Stop' : 'Add Stop to Route'}</SheetTitle>
             <SheetDescription>
-              Add stop details to include in your route
+              {stopToEdit ? 'Update stop details' : 'Add stop details to include in your route'}
             </SheetDescription>
           </SheetHeader>
-          <AddStopForm onSubmit={handleAddStop} onCancel={() => setShowAddStopSheet(false)} />
+          <AddStopForm 
+            onSubmit={handleAddStop} 
+            onCancel={() => {
+              setStopToEdit(null);
+              setShowAddStopSheet(false);
+            }} 
+          />
         </SheetContent>
       </Sheet>
     </form>

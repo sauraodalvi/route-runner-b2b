@@ -2,18 +2,14 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { CalendarIcon, Clock, MapPin } from "lucide-react";
+import { Clock, MapPin } from "lucide-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Stop } from "./CreateRouteForm";
+import { toast } from "@/hooks/use-toast";
 
 interface AddStopFormProps {
   onSubmit: (stop: Stop) => void;
@@ -60,19 +56,35 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
   });
 
   const stopType = form.watch("type");
+  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    const stop: Stop = {
-      id: 0, // Will be assigned on add
-      name: values.name,
-      type: values.type,
-      address: values.address,
-      time: values.time,
-      organization: values.organization,
-      contactName: values.contactName,
-      contactPhone: values.contactPhone,
-    };
-    onSubmit(stop);
+    try {
+      const stop: Stop = {
+        id: Date.now(), // Use timestamp as a unique ID
+        name: values.name,
+        type: values.type,
+        address: values.address,
+        time: values.time,
+        organization: values.organization,
+        contactName: values.contactName,
+        contactPhone: values.contactPhone,
+      };
+      onSubmit(stop);
+      form.reset();
+    } catch (error) {
+      console.error("Error adding stop:", error);
+      toast({
+        title: "Error adding stop",
+        description: "There was a problem adding this stop. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddressSelection = (address: string) => {
+    form.setValue("address", address);
+    setIsMapPickerOpen(false);
   };
 
   return (
@@ -145,7 +157,13 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
                 <FormControl className="flex-1">
                   <Input placeholder="Enter address" {...field} />
                 </FormControl>
-                <Button type="button" variant="outline" size="icon" className="shrink-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="icon" 
+                  className="shrink-0"
+                  onClick={() => setIsMapPickerOpen(true)}
+                >
                   <MapPin className="h-4 w-4" />
                 </Button>
               </div>

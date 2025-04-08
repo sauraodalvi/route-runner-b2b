@@ -9,16 +9,56 @@ import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, addDays } from "date-fns";
+import { cn } from "@/lib/utils";
+import { DateRange } from "react-day-picker";
 
 const TripManagement = () => {
   const [showCreateRoute, setShowCreateRoute] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("active");
+  const [date, setDate] = React.useState<DateRange | undefined>({
+    from: new Date(),
+    to: addDays(new Date(), 7),
+  });
+  const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  
+  // Filter routes based on search query
+  const filterRoutes = (query: string) => {
+    setSearchQuery(query);
+    // In a real app, this would filter the routes based on the query
+    toast({
+      title: "Search applied",
+      description: `Showing results for "${query}"`,
+    });
+  };
 
   const handleExport = () => {
+    // In a real app, this would export the routes as an Excel file
+    const currentDate = new Date().toLocaleDateString().replace(/\//g, '-');
     toast({
       title: "Export Started",
-      description: "Your data is being exported to Excel",
+      description: `Your data is being exported to Excel as routes-${currentDate}.xlsx`,
     });
+    
+    // Simulate download delay
+    setTimeout(() => {
+      toast({
+        title: "Export Completed",
+        description: "Your data has been exported successfully",
+      });
+    }, 2000);
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDate(range);
+    if (range?.from && range?.to) {
+      toast({
+        title: "Date Range Applied",
+        description: `Showing trips from ${format(range.from, "PPP")} to ${format(range.to, "PPP")}`,
+      });
+    }
   };
 
   return (
@@ -32,16 +72,51 @@ const TripManagement = () => {
                 placeholder="Search trips..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    filterRoutes(searchQuery);
+                  }
+                }}
                 className="pr-8"
               />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <Filter className="h-4 w-4 text-gray-400" />
-              </div>
+              <button 
+                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                onClick={() => filterRoutes(searchQuery)}
+              >
+                <Filter className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              </button>
             </div>
-            <Button variant="outline" size="sm">
-              <Calendar className="mr-2 h-4 w-4" />
-              Date Range
-            </Button>
+            
+            <Popover open={showDateRangePicker} onOpenChange={setShowDateRangePicker}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, "LLL d")} - {format(date.to, "LLL d")}
+                      </>
+                    ) : (
+                      format(date.from, "LLL d")
+                    )
+                  ) : (
+                    "Date Range"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={handleDateRangeChange}
+                  numberOfMonths={2}
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export
@@ -62,7 +137,7 @@ const TripManagement = () => {
             </CardContent>
           </Card>
         ) : (
-          <Tabs defaultValue="active">
+          <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="active">Active Trips</TabsTrigger>
               <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
@@ -72,28 +147,28 @@ const TripManagement = () => {
             <TabsContent value="active" className="pt-4">
               <Card>
                 <CardContent className="p-0">
-                  <RoutesList status="active" />
+                  <RoutesList status="active" searchQuery={searchQuery} dateRange={date} />
                 </CardContent>
               </Card>
             </TabsContent>
             <TabsContent value="upcoming" className="pt-4">
               <Card>
                 <CardContent className="p-0">
-                  <RoutesList status="upcoming" />
+                  <RoutesList status="upcoming" searchQuery={searchQuery} dateRange={date} />
                 </CardContent>
               </Card>
             </TabsContent>
             <TabsContent value="completed" className="pt-4">
               <Card>
                 <CardContent className="p-0">
-                  <RoutesList status="completed" />
+                  <RoutesList status="completed" searchQuery={searchQuery} dateRange={date} />
                 </CardContent>
               </Card>
             </TabsContent>
             <TabsContent value="routes" className="pt-4">
               <Card>
                 <CardContent className="p-0">
-                  <RoutesList status="all" />
+                  <RoutesList status="all" searchQuery={searchQuery} dateRange={date} />
                 </CardContent>
               </Card>
             </TabsContent>

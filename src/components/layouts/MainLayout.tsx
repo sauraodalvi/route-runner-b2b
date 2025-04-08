@@ -12,7 +12,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-6 overflow-auto bg-gray-50">{children}</main>
       </div>
     </SidebarProvider>
   );

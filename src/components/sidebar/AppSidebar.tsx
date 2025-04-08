@@ -12,6 +12,9 @@ import {
   SidebarHeader,
   SidebarTrigger,
   SidebarFooter,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
 } from "@/components/ui/sidebar";
 import { 
   Home, 
@@ -20,7 +23,15 @@ import {
   Truck, 
   Map, 
   Settings,
-  Users
+  Users,
+  Search,
+  CreditCard,
+  FileSpreadsheet,
+  History,
+  ClipboardList,
+  List,
+  Activity,
+  HelpCircle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -54,9 +65,41 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
+                  <Link to="/registration-billing">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Registration / Billing</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/patient-search">
+                    <Search className="h-5 w-5" />
+                    <span>Patient Search</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/assign-cards">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Assign Cards</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
                   <Link to="/appointments">
                     <Calendar className="h-5 w-5" />
                     <span>Appointments</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/home-collection">
+                    <Users className="h-5 w-5" />
+                    <span>Home Collection</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -67,22 +110,94 @@ export function AppSidebar() {
                     <span>B2B Collection</span>
                   </Link>
                 </SidebarMenuButton>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
                       <Link to="/trip-management">
                         <Map className="h-5 w-5" />
                         <span>Trip Management</span>
                       </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/home-collection">
-                    <Users className="h-5 w-5" />
-                    <span>Home Collection</span>
+                  <Link to="/billing-history">
+                    <History className="h-5 w-5" />
+                    <span>Billing History</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/consent-history">
+                    <ClipboardList className="h-5 w-5" />
+                    <span>Consent History</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/lab-form-values">
+                    <FileText className="h-5 w-5" />
+                    <span>Lab Form Values</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/financial-reports">
+                    <FileSpreadsheet className="h-5 w-5" />
+                    <span>Financial Reports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/archives">
+                    <FileText className="h-5 w-5" />
+                    <span>Archives</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/report-prints">
+                    <FileText className="h-5 w-5" />
+                    <span>Report Prints</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/collection-reports">
+                    <FileSpreadsheet className="h-5 w-5" />
+                    <span>Collection Reports</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/tests-list">
+                    <List className="h-5 w-5" />
+                    <span>Tests List</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/operational-status">
+                    <Activity className="h-5 w-5" />
+                    <span>Operational Status</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/advanced-search">
+                    <Search className="h-5 w-5" />
+                    <span>Advanced Search</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -92,9 +207,21 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="p-4">
         <SidebarMenuButton asChild>
-          <Link to="/settings">
+          <Link to="/updates">
+            <Activity className="h-5 w-5" />
+            <span>Updates</span>
+          </Link>
+        </SidebarMenuButton>
+        <SidebarMenuButton asChild className="mt-2">
+          <Link to="/video-tutorial">
+            <HelpCircle className="h-5 w-5" />
+            <span>Video Tutorial</span>
+          </Link>
+        </SidebarMenuButton>
+        <SidebarMenuButton asChild className="mt-2">
+          <Link to="/support">
             <Settings className="h-5 w-5" />
-            <span>Settings</span>
+            <span>Support</span>
           </Link>
         </SidebarMenuButton>
       </SidebarFooter>

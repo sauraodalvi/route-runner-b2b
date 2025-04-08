@@ -3,22 +3,39 @@ import React, { useState } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, FileSpreadsheet, MapPin } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Plus, FileSpreadsheet, Filter, Download, Calendar } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
+import { Input } from "@/components/ui/input";
 
 const TripManagement = () => {
   const [showCreateRoute, setShowCreateRoute] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
     <MainLayout>
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Trip Management</h1>
+          <h1 className="text-xl font-bold">Trip Management</h1>
           <div className="flex space-x-2">
+            <div className="relative w-64">
+              <Input 
+                placeholder="Search trips..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-8"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <Filter className="h-4 w-4 text-gray-400" />
+              </div>
+            </div>
             <Button variant="outline" size="sm">
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              <Calendar className="mr-2 h-4 w-4" />
+              Date Range
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
             {!showCreateRoute && (
@@ -32,18 +49,7 @@ const TripManagement = () => {
 
         {showCreateRoute ? (
           <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Create New Route</CardTitle>
-                  <CardDescription>Fill in the details to create a new collection route</CardDescription>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => setShowCreateRoute(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <CreateRouteForm onCancel={() => setShowCreateRoute(false)} />
             </CardContent>
           </Card>
@@ -56,16 +62,32 @@ const TripManagement = () => {
               <TabsTrigger value="routes">All Routes</TabsTrigger>
             </TabsList>
             <TabsContent value="active" className="pt-4">
-              <RoutesList status="active" />
+              <Card>
+                <CardContent className="p-0">
+                  <RoutesList status="active" />
+                </CardContent>
+              </Card>
             </TabsContent>
             <TabsContent value="upcoming" className="pt-4">
-              <RoutesList status="upcoming" />
+              <Card>
+                <CardContent className="p-0">
+                  <RoutesList status="upcoming" />
+                </CardContent>
+              </Card>
             </TabsContent>
             <TabsContent value="completed" className="pt-4">
-              <RoutesList status="completed" />
+              <Card>
+                <CardContent className="p-0">
+                  <RoutesList status="completed" />
+                </CardContent>
+              </Card>
             </TabsContent>
             <TabsContent value="routes" className="pt-4">
-              <RoutesList status="all" />
+              <Card>
+                <CardContent className="p-0">
+                  <RoutesList status="all" />
+                </CardContent>
+              </Card>
             </TabsContent>
           </Tabs>
         )}

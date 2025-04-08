@@ -1,17 +1,10 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Clock, Building, Check } from "lucide-react";
+import { MapPin, Clock, Building, Check, Phone, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-interface Stop {
-  id: number;
-  name: string;
-  address: string;
-  type: "checkpoint" | "pickup";
-  time?: string;
-  organization?: string;
-}
+import { Button } from "@/components/ui/button";
+import { Stop } from "./CreateRouteForm";
 
 interface StopsListProps {
   stops: Stop[];
@@ -43,6 +36,19 @@ export function StopsList({ stops }: StopsListProps) {
                     <MapPin className="h-3 w-3 mr-1" />
                     {stop.address}
                   </div>
+                  {stop.contactName && (
+                    <div className="text-xs text-muted-foreground flex items-center mt-1">
+                      <User className="h-3 w-3 mr-1" />
+                      {stop.contactName}
+                      {stop.contactPhone && (
+                        <>
+                          <span className="mx-1">•</span>
+                          <Phone className="h-3 w-3 mr-1" />
+                          {stop.contactPhone}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="text-right">
@@ -59,6 +65,11 @@ export function StopsList({ stops }: StopsListProps) {
                     {stop.time}
                   </div>
                 )}
+                {stop.organization && stop.type === "pickup" && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {organizations.find(org => org.id === stop.organization)?.name}
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -67,3 +78,11 @@ export function StopsList({ stops }: StopsListProps) {
     </div>
   );
 }
+
+// Mock organizations data
+const organizations = [
+  { id: "1", name: "Medlife Hospital" },
+  { id: "2", name: "City Medical Center" },
+  { id: "3", name: "HealthFirst Clinic" },
+  { id: "4", name: "CarePoint Diagnostics" },
+];

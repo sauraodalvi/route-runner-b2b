@@ -9,19 +9,39 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Plus, Upload, Map } from "lucide-react";
+import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import { AddStopForm } from "./AddStopForm";
+import { toast } from "@/hooks/use-toast";
 
 interface CreateRouteFormProps {
   onCancel: () => void;
 }
 
+export interface Stop {
+  id: number;
+  name: string;
+  address: string;
+  type: "checkpoint" | "pickup";
+  time?: string;
+  organization?: string;
+  contactName?: string;
+  contactPhone?: string;
+}
+
 export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
   const [date, setDate] = useState<Date>();
   const [frequencyType, setFrequencyType] = useState("one-time");
-  const [stops, setStops] = useState<any[]>([]);
+  const [stops, setStops] = useState<Stop[]>([]);
+  const [showAddStopSheet, setShowAddStopSheet] = useState(false);
+  const [routeName, setRouteName] = useState("");
+  const [endAfter, setEndAfter] = useState("");
+  const [endAfterUnit, setEndAfterUnit] = useState("trips");
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [pickupPartner, setPickupPartner] = useState("");
   
   const dummyPartners = [
     { id: 1, name: "FastTrack Logistics" },
@@ -29,8 +49,64 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
     { id: 3, name: "LabConnect Services" },
   ];
 
-  const handleAddStop = (stop: any) => {
+  const handleDayToggle = (day: string) => {
+    if (selectedDays.includes(day)) {
+      setSelectedDays(selectedDays.filter(d => d !== day));
+    } else {
+      setSelectedDays([...selectedDays, day]);
+    }
+  };
+
+  const handleAddStop = (stop: Stop) => {
     setStops([...stops, { ...stop, id: stops.length + 1 }]);
+    setShowAddStopSheet(false);
+    toast({
+      title: "Stop added successfully",
+      description: `${stop.name} has been added to the route`,
+    });
+  };
+
+  const handleCreateRoute = () => {
+    if (!routeName) {
+      toast({
+        title: "Missing information",
+        description: "Please enter a route name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!date) {
+      toast({
+        title: "Missing information",
+        description: "Please select a start date",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (stops.length === 0) {
+      toast({
+        title: "Missing information",
+        description: "Please add at least one stop to the route",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Route created successfully",
+      description: `${routeName} has been created with ${stops.length} stops`,
+    });
+
+    onCancel();
+  };
+
+  const handleDownloadTemplate = () => {
+    toast({
+      title: "Template downloaded",
+      description: "CSV template has been downloaded to your device",
+    });
   };
 
   return (
@@ -39,7 +115,12 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
         <div className="space-y-4">
           <div>
             <Label htmlFor="routeName">Route Name</Label>
-            <Input id="routeName" placeholder="Enter route name" />
+            <Input 
+              id="routeName" 
+              placeholder="Enter route name" 
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+            />
           </div>
           
           <div>
@@ -104,8 +185,10 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
                   type="number" 
                   className="w-1/3" 
                   placeholder="10" 
+                  value={endAfter}
+                  onChange={(e) => setEndAfter(e.target.value)}
                 />
-                <Select defaultValue="trips">
+                <Select value={endAfterUnit} onValueChange={setEndAfterUnit}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -126,7 +209,11 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
               <div className="flex flex-wrap gap-2">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                   <div key={day} className="flex items-center space-x-2">
-                    <Checkbox id={`day-${day}`} />
+                    <Checkbox 
+                      id={`day-${day}`} 
+                      checked={selectedDays.includes(day)}
+                      onCheckedChange={() => handleDayToggle(day)}
+                    />
                     <Label htmlFor={`day-${day}`} className="font-normal">{day}</Label>
                   </div>
                 ))}
@@ -136,7 +223,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
           
           <div>
             <Label htmlFor="pickupPartner">Assign Pickup Partner</Label>
-            <Select>
+            <Select value={pickupPartner} onValueChange={setPickupPartner}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select partner" />
               </SelectTrigger>
@@ -162,7 +249,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
               <TabsContent value="manual" className="pt-4">
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm font-medium">Stops ({stops.length})</span>
-                  <Button size="sm" variant="outline" onClick={() => {}}>
+                  <Button size="sm" variant="outline" onClick={() => setShowAddStopSheet(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Stop
                   </Button>
@@ -176,7 +263,8 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
                   <p className="text-xs text-muted-foreground mt-1">
                     Download template and fill with stop details
                   </p>
-                  <Button variant="outline" size="sm" className="mt-4">
+                  <Button variant="outline" size="sm" className="mt-4" onClick={handleDownloadTemplate}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
                     Download Template
                   </Button>
                 </div>
@@ -194,8 +282,20 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
 
       <div className="flex justify-end space-x-2">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button>Create Route</Button>
+        <Button onClick={handleCreateRoute}>Create Route</Button>
       </div>
+
+      <Sheet open={showAddStopSheet} onOpenChange={setShowAddStopSheet}>
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Add Stop to Route</SheetTitle>
+            <SheetDescription>
+              Add stop details to include in your route
+            </SheetDescription>
+          </SheetHeader>
+          <AddStopForm onSubmit={handleAddStop} onCancel={() => setShowAddStopSheet(false)} />
+        </SheetContent>
+      </Sheet>
     </form>
   );
 }

@@ -8,10 +8,18 @@ import { Plus, FileSpreadsheet, Filter, Download, Calendar } from "lucide-react"
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 
 const TripManagement = () => {
   const [showCreateRoute, setShowCreateRoute] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const handleExport = () => {
+    toast({
+      title: "Export Started",
+      description: "Your data is being exported to Excel",
+    });
+  };
 
   return (
     <MainLayout>
@@ -34,7 +42,7 @@ const TripManagement = () => {
               <Calendar className="mr-2 h-4 w-4" />
               Date Range
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>

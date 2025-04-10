@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layouts/MainLayout";
@@ -9,7 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { 
   AlertDialog,
@@ -396,12 +399,12 @@ const TripDetails = () => {
 };
 
 // Helper function to determine badge variant based on status
-const getBadgeVariant = (status: string) => {
+const getBadgeVariant = (status: string): "default" | "destructive" | "outline" | "secondary" => {
   switch (status?.toLowerCase()) {
     case 'active':
       return 'default';
     case 'completed':
-      return 'success';
+      return 'secondary';
     case 'cancelled':
       return 'destructive';
     case 'upcoming':

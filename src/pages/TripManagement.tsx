@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Calendar, Filter } from "lucide-react";
+import { Plus, Download, Calendar as CalendarIcon, Filter } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
@@ -104,7 +104,7 @@ const TripManagement = () => {
             <Popover open={showDateRangePicker} onOpenChange={setShowDateRangePicker}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm">
-                  <Calendar className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-2 h-4 w-4" />
                   {date?.from ? (
                     date.to ? (
                       <>

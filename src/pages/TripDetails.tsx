@@ -4,13 +4,36 @@ import { useParams, Link } from "react-router-dom";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChevronLeft, MapPin, Clock, Truck, User, Phone, FileText, FileImage, Eye, Download, CheckCircle, XCircle, Edit, AlertTriangle } from "lucide-react";
+import { 
+  ChevronLeft, 
+  MapPin, 
+  Clock, 
+  Truck, 
+  User, 
+  Phone, 
+  FileText, 
+  FileImage, 
+  Eye, 
+  Download, 
+  CheckCircle, 
+  XCircle, 
+  Edit, 
+  AlertTriangle, 
+  Building 
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
@@ -45,19 +68,49 @@ const TripDetails = () => {
       const mockTripData = {
         id: id,
         routeNo: "RTE-2024-123",
+        routeName: "Downtown Medical Collection",
         date: "2024-07-15",
         status: "active",
         assignedTeam: "FastTrack Logistics",
+        partnerName: "MedLogistics Inc.",
+        partnerContact: "+1 555-123-4567",
         driver: "John Doe",
         vehicle: "Truck ABC-123",
         stops: 5,
         samplesCollected: 23,
+        samplesRegistered: 20,
+        samplesUnregistered: 3,
+        createdBy: "Admin User",
         attachments: [
           { id: 1, name: "Delivery Manifest", type: "pdf" },
           { id: 2, name: "Temperature Log", type: "xlsx" },
           { id: 3, name: "Photo of Package", type: "image" },
         ],
         notes: "All samples collected successfully. Minor delay due to traffic.",
+        stopsList: [
+          { 
+            id: 1, 
+            name: "Central Hospital", 
+            address: "123 Main St, Suite 400, New York, NY 10001",
+            samplesCollected: 8,
+            samplesRegistered: 8,
+            samplesUnregistered: 0,
+            notes: "All samples collected on time",
+            contactName: "Dr. Sarah Johnson",
+            contactPhone: "+1 555-987-6543"
+          },
+          { 
+            id: 2, 
+            name: "City Lab", 
+            address: "456 Park Ave, New York, NY 10002",
+            samplesCollected: 15,
+            samplesRegistered: 12,
+            samplesUnregistered: 3,
+            notes: "Delayed collection due to lab processing",
+            contactName: "Lab Manager Mike",
+            contactPhone: "+1 555-456-7890"
+          },
+        ],
         samples: [
           { id: "S123", type: "Blood", collectedBy: "Nurse Jane", time: "09:30 AM" },
           { id: "S124", type: "Urine", collectedBy: "Dr. Smith", time: "10:15 AM" },
@@ -126,17 +179,20 @@ const TripDetails = () => {
 
   return (
     <MainLayout>
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Link to="/trip-management" className="flex items-center text-muted-foreground hover:text-foreground">
+      <div className="space-y-6 max-w-[1200px] mx-auto px-4 sm:px-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex flex-col gap-2">
+            <Link to="/trip-management" className="flex items-center text-muted-foreground hover:text-foreground w-fit">
               <ChevronLeft className="h-4 w-4 mr-1" />
               Back to Trip Management
             </Link>
-            <h1 className="text-xl font-bold">Trip Details: {tripData?.routeNo}</h1>
-            <Badge variant={getBadgeVariant(tripData?.status)}>{tripData?.status}</Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-bold mr-2">{tripData?.routeName}</h1>
+              <Badge variant={getBadgeVariant(tripData?.status)}>{tripData?.status}</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Trip ID: {tripData?.routeNo}</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
             <Button variant="outline" size="sm" onClick={() => setShowEditDialog(true)}>
               <Edit className="mr-2 h-4 w-4" />
               Edit Trip
@@ -152,118 +208,193 @@ const TripDetails = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Trip Information Card */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Trip Information</CardTitle>
+              <CardDescription>Essential details about this trip</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-4">
+                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Date</p>
+                      <p className="text-muted-foreground">{tripData?.date}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Created By</p>
+                      <p className="text-muted-foreground">{tripData?.createdBy}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-4">
+                    <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Assigned Team</p>
+                      <p className="text-muted-foreground">{tripData?.assignedTeam}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Partner</p>
+                      <p className="text-muted-foreground">{tripData?.partnerName}</p>
+                      {tripData?.partnerContact && (
+                        <p className="text-sm text-muted-foreground flex items-center">
+                          <Phone className="h-3 w-3 mr-1" />
+                          {tripData.partnerContact}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start space-x-4">
+                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Stops</p>
+                      <p className="text-muted-foreground">{tripData?.stops}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start space-x-4">
+                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div>
+                      <p className="font-medium">Samples Collected</p>
+                      <p className="text-muted-foreground">
+                        Total: {tripData?.samplesCollected} 
+                        {tripData?.samplesRegistered !== undefined && (
+                          <span className="text-sm ml-2">
+                            (Registered: {tripData.samplesRegistered} / 
+                            Unregistered: {tripData.samplesUnregistered})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Stops List */}
+          <Card className="lg:col-span-3">
+            <CardHeader>
+              <CardTitle>Stops</CardTitle>
+              <CardDescription>Collection points for this trip</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {tripData?.stopsList?.map((stop: any, index: number) => (
+                  <Card key={stop.id} className="overflow-hidden">
+                    <div className="border-l-4 border-primary p-4">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center">
+                            <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mr-2">
+                              {index + 1}
+                            </div>
+                            <h3 className="font-medium">{stop.name}</h3>
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-1 flex items-center">
+                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                            <span className="break-words">{stop.address}</span>
+                          </p>
+                          {stop.contactName && (
+                            <p className="text-sm text-muted-foreground mt-1 flex items-center">
+                              <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                              {stop.contactName}
+                              {stop.contactPhone && (
+                                <span className="ml-2 flex items-center">
+                                  <Phone className="h-3 w-3 mr-1 flex-shrink-0" />
+                                  {stop.contactPhone}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="mt-2 md:mt-0">
+                          <Badge variant="outline" className="mb-1">
+                            Samples: {stop.samplesCollected}
+                            {stop.samplesRegistered !== undefined && (
+                              <span className="ml-1">
+                                ({stop.samplesRegistered}/{stop.samplesUnregistered})
+                              </span>
+                            )}
+                          </Badge>
+                          {stop.notes && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              <span className="font-medium">Notes:</span> {stop.notes}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="samples" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full justify-start">
             <TabsTrigger value="samples">Samples</TabsTrigger>
             <TabsTrigger value="attachments">Attachments</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
-          <TabsContent value="overview" className="pt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Trip Information</CardTitle>
-                <CardDescription>Details about this trip</CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-4">
-                <div className="flex items-center space-x-4">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Route Number</p>
-                    <p className="text-muted-foreground">{tripData?.routeNo}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Date</p>
-                    <p className="text-muted-foreground">{tripData?.date}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Truck className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Assigned Team</p>
-                    <p className="text-muted-foreground">{tripData?.assignedTeam}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-4">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Driver</p>
-                      <p className="text-muted-foreground">{tripData?.driver}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-4">
-                    <Truck className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm font-medium">Vehicle</p>
-                      <p className="text-muted-foreground">{tripData?.vehicle}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Stops</p>
-                    <p className="text-muted-foreground">{tripData?.stops}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <FileText className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Samples Collected</p>
-                    <p className="text-muted-foreground">{tripData?.samplesCollected}</p>
-                  </div>
-                </div>
-              </CardContent>
-              <CardFooter className="justify-end">
-                <Button size="sm">
-                  <Download className="mr-2 h-4 w-4" />
-                  Generate Report
-                </Button>
-              </CardFooter>
-            </Card>
-          </TabsContent>
           <TabsContent value="samples" className="pt-4">
             <Card>
               <CardHeader>
                 <CardTitle>Samples Collected</CardTitle>
                 <CardDescription>List of samples collected during this trip</CardDescription>
               </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Sample ID</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Collected By</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tripData?.samples.map((sample: any) => (
-                      <TableRow key={sample.id}>
-                        <TableCell>{sample.id}</TableCell>
-                        <TableCell>{sample.type}</TableCell>
-                        <TableCell>{sample.collectedBy}</TableCell>
-                        <TableCell>{sample.time}</TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            onClick={() => handleOpenSampleDetails(sample.id)}
-                          >
-                            <Eye className="h-4 w-4 mr-2" />
-                            View Details
-                          </Button>
-                        </TableCell>
+              <CardContent className="overflow-auto">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Sample ID</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Collected By</TableHead>
+                        <TableHead>Time</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {tripData?.samples.map((sample: any) => (
+                        <TableRow key={sample.id}>
+                          <TableCell>{sample.id}</TableCell>
+                          <TableCell>{sample.type}</TableCell>
+                          <TableCell>{sample.collectedBy}</TableCell>
+                          <TableCell>{sample.time}</TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleOpenSampleDetails(sample.id)}
+                            >
+                              <Eye className="h-4 w-4 mr-2" />
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -273,25 +404,30 @@ const TripDetails = () => {
                 <CardTitle>Attachments</CardTitle>
                 <CardDescription>Documents and images related to this trip</CardDescription>
               </CardHeader>
-              <CardContent className="grid gap-4">
-                {tripData?.attachments.map((attachment: any) => (
-                  <div key={attachment.id} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      {attachment.type === "pdf" && <FileText className="h-4 w-4 text-muted-foreground" />}
-                      {attachment.type === "xlsx" && <FileText className="h-4 w-4 text-muted-foreground" />}
-                      {attachment.type === "image" && <FileImage className="h-4 w-4 text-muted-foreground" />}
-                      <p className="text-sm font-medium">{attachment.name}</p>
+              <CardContent>
+                <div className="space-y-4">
+                  {tripData?.attachments.map((attachment: any) => (
+                    <div key={attachment.id} className="flex items-center justify-between border-b pb-2">
+                      <div className="flex items-center space-x-2">
+                        {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
+                        {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
+                        {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
+                        <p className="font-medium">{attachment.name}</p>
+                        <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm" onClick={() => handleViewAttachment(attachment)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleDownloadAttachment(attachment.id)}>
+                          <Download className="h-4 w-4 mr-2" />
+                          Download
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="icon" onClick={() => handleViewAttachment(attachment)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="icon" onClick={() => handleDownloadAttachment(attachment.id)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -302,7 +438,7 @@ const TripDetails = () => {
                 <CardDescription>Additional notes and observations</CardDescription>
               </CardHeader>
               <CardContent>
-                <p>{tripData?.notes}</p>
+                <p>{tripData?.notes || "No notes available for this trip."}</p>
               </CardContent>
             </Card>
           </TabsContent>
@@ -314,6 +450,9 @@ const TripDetails = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Trip: {tripData?.routeNo}</DialogTitle>
+            <DialogDescription>
+              Make changes to this trip's information and stops
+            </DialogDescription>
           </DialogHeader>
           <CreateRouteForm 
             onCancel={() => setShowEditDialog(false)} 
@@ -345,9 +484,14 @@ const TripDetails = () => {
         <DialogContent className="sm:max-w-[75%] lg:max-w-[50%]">
           <DialogHeader>
             <DialogTitle>Attachment Preview</DialogTitle>
+            <DialogDescription>
+              Preview of the selected attachment
+            </DialogDescription>
           </DialogHeader>
           {showAttachment && (
-            <img src={`/images/${showAttachment}`} alt="Attachment Preview" className="w-full rounded-md" />
+            <div className="overflow-hidden rounded-md">
+              <img src={`/images/${showAttachment}`} alt="Attachment Preview" className="w-full object-contain max-h-[60vh]" />
+            </div>
           )}
         </DialogContent>
       </Dialog>

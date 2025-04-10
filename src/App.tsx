@@ -10,7 +10,6 @@ import { Toaster } from './components/ui/toaster'
 import { ThemeProvider } from './components/theme-provider'
 
 function App() {
-
   return (
     <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <Router>

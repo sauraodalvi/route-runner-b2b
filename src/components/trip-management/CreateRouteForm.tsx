@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X } from "lucide-react";
+import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X, Edit, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";

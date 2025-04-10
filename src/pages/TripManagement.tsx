@@ -14,12 +14,14 @@ import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 const TripManagement = () => {
+  const navigate = useNavigate();
   const [showCreateRouteDialog, setShowCreateRouteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
-  const [date, setDate] = React.useState<DateRange | undefined>({
+  const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(),
     to: addDays(new Date(), 7),
   });
@@ -66,6 +68,10 @@ const TripManagement = () => {
   const openEditRouteDialog = (route: any) => {
     setRouteToEdit(route);
     setShowCreateRouteDialog(true);
+  };
+
+  const viewTripDetails = (routeId: string) => {
+    navigate(`/trip-management/details/${routeId}`);
   };
 
   return (
@@ -153,6 +159,7 @@ const TripManagement = () => {
                   searchQuery={searchQuery} 
                   dateRange={date} 
                   onEditRoute={openEditRouteDialog}
+                  onViewDetails={viewTripDetails}
                 />
               </CardContent>
             </Card>
@@ -165,6 +172,7 @@ const TripManagement = () => {
                   searchQuery={searchQuery} 
                   dateRange={date} 
                   onEditRoute={openEditRouteDialog}
+                  onViewDetails={viewTripDetails}
                 />
               </CardContent>
             </Card>
@@ -177,6 +185,7 @@ const TripManagement = () => {
                   searchQuery={searchQuery} 
                   dateRange={date} 
                   onEditRoute={openEditRouteDialog}
+                  onViewDetails={viewTripDetails}
                 />
               </CardContent>
             </Card>
@@ -189,6 +198,7 @@ const TripManagement = () => {
                   searchQuery={searchQuery} 
                   dateRange={date} 
                   onEditRoute={openEditRouteDialog}
+                  onViewDetails={viewTripDetails}
                 />
               </CardContent>
             </Card>

@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2, Check, FileText, PaperclipIcon } from "lucide-react";
+import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2, Check, FileText, PaperclipIcon, ArrowUpDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +31,7 @@ interface RoutesListProps {
   searchQuery?: string;
   dateRange?: DateRange;
   onEditRoute?: (route: any) => void;
+  onViewDetails?: (routeId: string) => void;
 }
 
 // Enhanced mock data with more dummy records
@@ -70,7 +71,7 @@ const generateMockData = () => {
   return allRoutes;
 };
 
-export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }: RoutesListProps) {
+export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute, onViewDetails }: RoutesListProps) {
   // Use enhanced mock data
   const allRoutes = generateMockData();
   
@@ -143,10 +144,14 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }:
   };
 
   const handleViewRoute = (routeId: string) => {
-    const routeToView = routes.find(route => route.id === routeId);
-    if (routeToView) {
-      setRouteDetails(routeToView);
-      setShowViewDetails(true);
+    if (onViewDetails) {
+      onViewDetails(routeId);
+    } else {
+      const routeToView = routes.find(route => route.id === routeId);
+      if (routeToView) {
+        setRouteDetails(routeToView);
+        setShowViewDetails(true);
+      }
     }
   };
 
@@ -460,7 +465,8 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }:
                 </div>
               )}
               
-              {routeDetails.attachments && routeDetails.attachments.length > 0 && (
+              {routeDetails.attachments && routeDetails.attachments.length >
+0 && (
                 <div>
                   <h3 className="text-sm font-medium text-gray-500">Attachments</h3>
                   <div className="mt-2 flex flex-wrap gap-2">
@@ -513,20 +519,45 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }:
             <DialogTitle>Attachment: {selectedAttachment}</DialogTitle>
           </DialogHeader>
           <div className="min-h-[60vh] flex items-center justify-center bg-gray-100 rounded-md">
-            <div className="text-center">
-              <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-600">Preview not available for {selectedAttachment}</p>
-              <Button className="mt-4" onClick={() => {
-                toast({
-                  title: "Download Started",
-                  description: `Downloading ${selectedAttachment}`,
-                });
-                setShowAttachment(false);
-              }}>
-                Download File
-              </Button>
-            </div>
+            {selectedAttachment && selectedAttachment.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <img 
+                  src={`/placeholder.svg`} 
+                  alt={selectedAttachment} 
+                  className="max-w-full max-h-[50vh] object-contain" 
+                />
+              </div>
+            ) : selectedAttachment && selectedAttachment.match(/\.(pdf)$/i) ? (
+              <div className="text-center w-full">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">PDF Preview</p>
+                <div className="mt-4 bg-white p-4 rounded border max-h-[50vh] overflow-y-auto mx-auto max-w-lg">
+                  <div className="h-96 border-b mb-4 flex items-center justify-center bg-gray-50">
+                    <p className="text-gray-400">Page 1</p>
+                  </div>
+                  <div className="h-96 mb-4 flex items-center justify-center bg-gray-50">
+                    <p className="text-gray-400">Page 2</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600">Preview not available for {selectedAttachment}</p>
+              </div>
+            )}
           </div>
+          <DialogFooter>
+            <Button onClick={() => {
+              toast({
+                title: "Download Started",
+                description: `Downloading ${selectedAttachment}`,
+              });
+              setShowAttachment(false);
+            }}>
+              Download File
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -543,7 +574,7 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }:
             <AlertDialogCancel onClick={() => setShowDeleteConfirm(false)}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleDeleteRoute}>
+            <AlertDialogAction onClick={handleDeleteRoute} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -566,7 +597,7 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }:
             <Button variant="outline" onClick={handleCancelTrip}>
               Cancel This Trip Only
             </Button>
-            <Button variant="destructive" onClick={handleCancelAllLinkedTrips}>
+            <Button onClick={handleCancelAllLinkedTrips} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Cancel All Linked Trips
             </Button>
           </AlertDialogFooter>

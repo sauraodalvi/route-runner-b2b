@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet } from "lucide-react";
+import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -58,6 +58,7 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
   const [stopToEdit, setStopToEdit] = useState<Stop | null>(null);
   const [editMode, setEditMode] = useState("this");
   const [showEditOptions, setShowEditOptions] = useState(false);
+  const [showCancelOptions, setShowCancelOptions] = useState(false);
   
   const dummyPartners = [
     { id: 1, name: "FastTrack Logistics" },
@@ -141,6 +142,28 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
     setStopToEdit(stop);
     setShowAddStopDialog(true);
   };
+  
+  const handleMoveStop = (stopId: number, direction: 'up' | 'down') => {
+    const stopIndex = stops.findIndex(stop => stop.id === stopId);
+    if (
+      (direction === 'up' && stopIndex === 0) || 
+      (direction === 'down' && stopIndex === stops.length - 1)
+    ) {
+      return; // Can't move further
+    }
+    
+    const newStops = [...stops];
+    const targetIndex = direction === 'up' ? stopIndex - 1 : stopIndex + 1;
+    const temp = newStops[targetIndex];
+    newStops[targetIndex] = newStops[stopIndex];
+    newStops[stopIndex] = temp;
+    
+    setStops(newStops);
+    toast({
+      title: "Stop reordered",
+      description: `${newStops[targetIndex].name} moved ${direction}`,
+    });
+  };
 
   const handleCreateRoute = () => {
     if (!routeName) {
@@ -191,6 +214,17 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         : `${routeName} has been created with ${stops.length} stops`,
     });
     setShowEditOptions(false);
+    onCancel();
+  };
+  
+  const handleCancelTrip = (mode: 'this' | 'all') => {
+    toast({
+      title: `Trip${mode === 'all' ? 's' : ''} Cancelled`,
+      description: mode === 'this' 
+        ? `${initialData?.id || 'Trip'} has been cancelled` 
+        : `All trips in route ${routeName} have been cancelled`,
+    });
+    setShowCancelOptions(false);
     onCancel();
   };
 
@@ -410,11 +444,71 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                   Add Stop
                 </Button>
               </div>
-              <StopsList 
-                stops={stops} 
-                onDeleteStop={handleDeleteStop}
-                onEditStop={handleEditStop}
-              />
+              <div className="overflow-y-auto max-h-[300px] border rounded-md">
+                {stops.length === 0 ? (
+                  <div className="p-6 text-center text-muted-foreground">
+                    No stops added yet. Click "Add Stop" to get started.
+                  </div>
+                ) : (
+                  <ul className="divide-y">
+                    {stops.map((stop, index) => (
+                      <li key={stop.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full mr-3 text-sm">
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="font-medium">{stop.name}</p>
+                            <p className="text-sm text-muted-foreground truncate max-w-xs">
+                              {stop.address}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={index === 0}
+                            onClick={() => handleMoveStop(stop.id, 'up')}
+                            className="h-8 w-8"
+                          >
+                            <ArrowUp className="h-4 w-4" />
+                            <span className="sr-only">Move Up</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            disabled={index === stops.length - 1}
+                            onClick={() => handleMoveStop(stop.id, 'down')}
+                            className="h-8 w-8"
+                          >
+                            <ArrowDown className="h-4 w-4" />
+                            <span className="sr-only">Move Down</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleEditStop(stop)}
+                            className="h-8 w-8"
+                          >
+                            <Edit className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleDeleteStop(stop.id)}
+                            className="h-8 w-8 text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </TabsContent>
             <TabsContent value="bulk" className="pt-4">
               <div className="text-center p-8 border-2 border-dashed rounded-lg">
@@ -445,11 +539,65 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm font-medium">Stops ({stops.length})</span>
                   </div>
-                  <StopsList 
-                    stops={stops} 
-                    onDeleteStop={handleDeleteStop} 
-                    onEditStop={handleEditStop}
-                  />
+                  <div className="overflow-y-auto max-h-[300px] border rounded-md">
+                    <ul className="divide-y">
+                      {stops.map((stop, index) => (
+                        <li key={stop.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
+                          <div className="flex items-center">
+                            <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full mr-3 text-sm">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <p className="font-medium">{stop.name}</p>
+                              <p className="text-sm text-muted-foreground truncate max-w-xs">
+                                {stop.address}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={index === 0}
+                              onClick={() => handleMoveStop(stop.id, 'up')}
+                              className="h-8 w-8"
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                              <span className="sr-only">Move Up</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              disabled={index === stops.length - 1}
+                              onClick={() => handleMoveStop(stop.id, 'down')}
+                              className="h-8 w-8"
+                            >
+                              <ArrowDown className="h-4 w-4" />
+                              <span className="sr-only">Move Down</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleEditStop(stop)}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleDeleteStop(stop.id)}
+                              className="h-8 w-8 text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </Button>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
             </TabsContent>
@@ -468,12 +616,39 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         </div>
       </div>
 
-      <div className="flex justify-end space-x-2">
-        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleCreateRoute}>
-          {initialData ? 'Save Changes' : 'Create Route'}
-        </Button>
-      </div>
+      {initialData ? (
+        <div className="border-t pt-4 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Button 
+              className="w-full" 
+              onClick={() => setShowEditOptions(true)}
+            >
+              <Check className="mr-2 h-4 w-4" />
+              Apply Changes
+            </Button>
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => setShowCancelOptions(true)}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel Trip
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button variant="ghost" onClick={onCancel}>
+              Back to Trip Management
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button onClick={handleCreateRoute}>
+            Create Route
+          </Button>
+        </div>
+      )}
 
       {/* Add Stop Dialog */}
       <Dialog 
@@ -519,7 +694,9 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                 setEditMode("this");
                 handleSaveEdit();
               }}
+              className="flex items-center"
             >
+              <Check className="mr-2 h-4 w-4" />
               Edit Only This Trip
             </Button>
             <Button 
@@ -527,8 +704,42 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                 setEditMode("all");
                 handleSaveEdit();
               }}
+              className="flex items-center"
             >
+              <RefreshCw className="mr-2 h-4 w-4" />
               Edit All Linked Trips
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Trip Options Dialog */}
+      <AlertDialog open={showCancelOptions} onOpenChange={setShowCancelOptions}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Trip</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to cancel only this trip or all linked trips in this route?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => setShowCancelOptions(false)}>
+              Back
+            </AlertDialogCancel>
+            <Button 
+              variant="outline" 
+              onClick={() => handleCancelTrip('this')}
+              className="flex items-center"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel This Trip Only
+            </Button>
+            <Button 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex items-center"
+              onClick={() => handleCancelTrip('all')}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel All Linked Trips
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

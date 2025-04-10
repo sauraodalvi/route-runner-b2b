@@ -19,7 +19,8 @@ import {
   XCircle, 
   Edit, 
   AlertTriangle, 
-  Building 
+  Building,
+  Calendar as CalendarIcon 
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { 
   AlertDialog,
@@ -52,7 +54,7 @@ const TripDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [tripData, setTripData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [selectedStop, setSelectedStop] = useState<any>(null);
   const [showAttachment, setShowAttachment] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -81,11 +83,6 @@ const TripDetails = () => {
         samplesRegistered: 20,
         samplesUnregistered: 3,
         createdBy: "Admin User",
-        attachments: [
-          { id: 1, name: "Delivery Manifest", type: "pdf" },
-          { id: 2, name: "Temperature Log", type: "xlsx" },
-          { id: 3, name: "Photo of Package", type: "image" },
-        ],
         notes: "All samples collected successfully. Minor delay due to traffic.",
         stopsList: [
           { 
@@ -97,7 +94,16 @@ const TripDetails = () => {
             samplesUnregistered: 0,
             notes: "All samples collected on time",
             contactName: "Dr. Sarah Johnson",
-            contactPhone: "+1 555-987-6543"
+            contactPhone: "+1 555-987-6543",
+            samples: [
+              { id: "S101", type: "Blood", collectedBy: "Dr. Sarah", time: "09:00 AM" },
+              { id: "S102", type: "Urine", collectedBy: "Nurse Mike", time: "09:15 AM" },
+              { id: "S103", type: "Tissue", collectedBy: "Dr. Sarah", time: "09:30 AM" }
+            ],
+            attachments: [
+              { id: 101, name: "Collection Receipt", type: "pdf" },
+              { id: 102, name: "Temperature Log", type: "xlsx" }
+            ]
           },
           { 
             id: 2, 
@@ -108,13 +114,19 @@ const TripDetails = () => {
             samplesUnregistered: 3,
             notes: "Delayed collection due to lab processing",
             contactName: "Lab Manager Mike",
-            contactPhone: "+1 555-456-7890"
+            contactPhone: "+1 555-456-7890",
+            samples: [
+              { id: "S201", type: "Blood", collectedBy: "Lab Tech Jim", time: "11:00 AM" },
+              { id: "S202", type: "Serum", collectedBy: "Lab Tech Anna", time: "11:15 AM" },
+              { id: "S203", type: "Plasma", collectedBy: "Lab Tech Jim", time: "11:30 AM" },
+              { id: "S204", type: "CSF", collectedBy: "Dr. Roberts", time: "11:45 AM" }
+            ],
+            attachments: [
+              { id: 201, name: "Lab Manifest", type: "pdf" },
+              { id: 202, name: "Sample Photos", type: "image" }
+            ]
           },
-        ],
-        samples: [
-          { id: "S123", type: "Blood", collectedBy: "Nurse Jane", time: "09:30 AM" },
-          { id: "S124", type: "Urine", collectedBy: "Dr. Smith", time: "10:15 AM" },
-        ],
+        ]
       };
       setTripData(mockTripData);
       setLoading(false);
@@ -167,6 +179,10 @@ const TripDetails = () => {
     setShowSampleDetails(false);
   };
 
+  const openStopDetails = (stop: any) => {
+    setSelectedStop(stop);
+  };
+
   if (loading) {
     return (
       <MainLayout>
@@ -208,241 +224,224 @@ const TripDetails = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Trip Information Card */}
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Trip Information</CardTitle>
-              <CardDescription>Essential details about this trip</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <Clock className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Date</p>
-                      <p className="text-muted-foreground">{tripData?.date}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start space-x-4">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Created By</p>
-                      <p className="text-muted-foreground">{tripData?.createdBy}</p>
-                    </div>
+        {/* Trip Information Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Trip Information</CardTitle>
+            <CardDescription>Essential details about this trip</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Date</p>
+                    <p className="text-muted-foreground">{tripData?.date}</p>
                   </div>
                 </div>
+                
+                <div className="flex items-start space-x-4">
+                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Created By</p>
+                    <p className="text-muted-foreground">{tripData?.createdBy}</p>
+                  </div>
+                </div>
+              </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Assigned Team</p>
-                      <p className="text-muted-foreground">{tripData?.assignedTeam}</p>
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Assigned Team</p>
+                    <p className="text-muted-foreground">{tripData?.assignedTeam}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Partner</p>
+                    <p className="text-muted-foreground">{tripData?.partnerName}</p>
+                    {tripData?.partnerContact && (
+                      <p className="text-sm text-muted-foreground flex items-center">
+                        <Phone className="h-3 w-3 mr-1" />
+                        {tripData.partnerContact}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-start space-x-4">
+                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Stops</p>
+                    <p className="text-muted-foreground">{tripData?.stops}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4">
+                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <div>
+                    <p className="font-medium">Samples Collected</p>
+                    <p className="text-muted-foreground">
+                      Total: {tripData?.samplesCollected} 
+                      {tripData?.samplesRegistered !== undefined && (
+                        <span className="text-sm ml-2">
+                          (Registered: {tripData.samplesRegistered} / 
+                          Unregistered: {tripData.samplesUnregistered})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stops List - Each stop now has its own details section */}
+        <h2 className="text-lg font-semibold mt-6">Collection Stops</h2>
+        <div className="space-y-6">
+          {tripData?.stopsList?.map((stop: any, index: number) => (
+            <Card key={stop.id} className="overflow-hidden">
+              <CardHeader className="bg-muted/30 pb-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center">
+                    <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mr-2">
+                      {index + 1}
                     </div>
+                    <CardTitle className="text-lg">{stop.name}</CardTitle>
+                  </div>
+                  <Badge variant="outline">
+                    Samples: {stop.samplesCollected}
+                    {stop.samplesRegistered !== undefined && (
+                      <span className="ml-1">
+                        ({stop.samplesRegistered}/{stop.samplesUnregistered})
+                      </span>
+                    )}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {/* Stop information */}
+                  <div className="lg:col-span-1">
+                    <h3 className="font-medium text-sm mb-2">Stop Information</h3>
+                    <p className="text-sm text-muted-foreground flex items-start mb-2">
+                      <MapPin className="h-3 w-3 mr-1 mt-1 flex-shrink-0" />
+                      <span>{stop.address}</span>
+                    </p>
+                    {stop.contactName && (
+                      <p className="text-sm text-muted-foreground flex items-center mb-2">
+                        <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                        {stop.contactName}
+                      </p>
+                    )}
+                    {stop.contactPhone && (
+                      <p className="text-sm text-muted-foreground flex items-center mb-2">
+                        <Phone className="h-3 w-3 mr-1 flex-shrink-0" />
+                        {stop.contactPhone}
+                      </p>
+                    )}
                   </div>
                   
-                  <div className="flex items-start space-x-4">
-                    <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Partner</p>
-                      <p className="text-muted-foreground">{tripData?.partnerName}</p>
-                      {tripData?.partnerContact && (
-                        <p className="text-sm text-muted-foreground flex items-center">
-                          <Phone className="h-3 w-3 mr-1" />
-                          {tripData.partnerContact}
-                        </p>
-                      )}
+                  {/* Stop notes */}
+                  <div className="lg:col-span-2">
+                    <h3 className="font-medium text-sm mb-2">Notes</h3>
+                    <div className="bg-muted/20 p-3 rounded-md">
+                      <p className="text-sm">{stop.notes || "No notes for this stop."}</p>
                     </div>
                   </div>
                 </div>
                 
-                <div className="space-y-4">
-                  <div className="flex items-start space-x-4">
-                    <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Stops</p>
-                      <p className="text-muted-foreground">{tripData?.stops}</p>
-                    </div>
-                  </div>
+                {/* Tabs for samples and attachments */}
+                <Tabs defaultValue="samples" className="mt-4">
+                  <TabsList className="w-full sm:w-auto">
+                    <TabsTrigger value="samples">Samples ({stop.samples?.length || 0})</TabsTrigger>
+                    <TabsTrigger value="attachments">Attachments ({stop.attachments?.length || 0})</TabsTrigger>
+                  </TabsList>
                   
-                  <div className="flex items-start space-x-4">
-                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Samples Collected</p>
-                      <p className="text-muted-foreground">
-                        Total: {tripData?.samplesCollected} 
-                        {tripData?.samplesRegistered !== undefined && (
-                          <span className="text-sm ml-2">
-                            (Registered: {tripData.samplesRegistered} / 
-                            Unregistered: {tripData.samplesUnregistered})
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Stops List */}
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>Stops</CardTitle>
-              <CardDescription>Collection points for this trip</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {tripData?.stopsList?.map((stop: any, index: number) => (
-                  <Card key={stop.id} className="overflow-hidden">
-                    <div className="border-l-4 border-primary p-4">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center">
-                            <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mr-2">
-                              {index + 1}
-                            </div>
-                            <h3 className="font-medium">{stop.name}</h3>
-                          </div>
-                          <p className="text-sm text-muted-foreground mt-1 flex items-center">
-                            <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
-                            <span className="break-words">{stop.address}</span>
-                          </p>
-                          {stop.contactName && (
-                            <p className="text-sm text-muted-foreground mt-1 flex items-center">
-                              <User className="h-3 w-3 mr-1 flex-shrink-0" />
-                              {stop.contactName}
-                              {stop.contactPhone && (
-                                <span className="ml-2 flex items-center">
-                                  <Phone className="h-3 w-3 mr-1 flex-shrink-0" />
-                                  {stop.contactPhone}
-                                </span>
-                              )}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="mt-2 md:mt-0">
-                          <Badge variant="outline" className="mb-1">
-                            Samples: {stop.samplesCollected}
-                            {stop.samplesRegistered !== undefined && (
-                              <span className="ml-1">
-                                ({stop.samplesRegistered}/{stop.samplesUnregistered})
-                              </span>
-                            )}
-                          </Badge>
-                          {stop.notes && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              <span className="font-medium">Notes:</span> {stop.notes}
-                            </p>
-                          )}
-                        </div>
+                  {/* Samples tab content */}
+                  <TabsContent value="samples" className="mt-4">
+                    {stop.samples && stop.samples.length > 0 ? (
+                      <div className="rounded-md border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Sample ID</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Collected By</TableHead>
+                              <TableHead>Time</TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {stop.samples.map((sample: any) => (
+                              <TableRow key={sample.id}>
+                                <TableCell>{sample.id}</TableCell>
+                                <TableCell>{sample.type}</TableCell>
+                                <TableCell>{sample.collectedBy}</TableCell>
+                                <TableCell>{sample.time}</TableCell>
+                                <TableCell className="text-right">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleOpenSampleDetails(sample.id)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Details
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No samples collected at this stop.</p>
+                    )}
+                  </TabsContent>
+                  
+                  {/* Attachments tab content */}
+                  <TabsContent value="attachments" className="mt-4">
+                    {stop.attachments && stop.attachments.length > 0 ? (
+                      <div className="space-y-2">
+                        {stop.attachments.map((attachment: any) => (
+                          <div key={attachment.id} className="flex items-center justify-between border-b pb-2">
+                            <div className="flex items-center space-x-2">
+                              {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
+                              {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
+                              {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
+                              <p className="font-medium">{attachment.name}</p>
+                              <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm" onClick={() => handleViewAttachment(attachment)}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => handleDownloadAttachment(attachment.id)}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No attachments for this stop.</p>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <Tabs defaultValue="samples" value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="samples">Samples</TabsTrigger>
-            <TabsTrigger value="attachments">Attachments</TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="samples" className="pt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Samples Collected</CardTitle>
-                <CardDescription>List of samples collected during this trip</CardDescription>
-              </CardHeader>
-              <CardContent className="overflow-auto">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Sample ID</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Collected By</TableHead>
-                        <TableHead>Time</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tripData?.samples.map((sample: any) => (
-                        <TableRow key={sample.id}>
-                          <TableCell>{sample.id}</TableCell>
-                          <TableCell>{sample.type}</TableCell>
-                          <TableCell>{sample.collectedBy}</TableCell>
-                          <TableCell>{sample.time}</TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleOpenSampleDetails(sample.id)}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="attachments" className="pt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Attachments</CardTitle>
-                <CardDescription>Documents and images related to this trip</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {tripData?.attachments.map((attachment: any) => (
-                    <div key={attachment.id} className="flex items-center justify-between border-b pb-2">
-                      <div className="flex items-center space-x-2">
-                        {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
-                        {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
-                        {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
-                        <p className="font-medium">{attachment.name}</p>
-                        <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewAttachment(attachment)}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDownloadAttachment(attachment.id)}>
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="notes" className="pt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Notes</CardTitle>
-                <CardDescription>Additional notes and observations</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>{tripData?.notes || "No notes available for this trip."}</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
 
       {/* Edit Trip Dialog */}
@@ -511,24 +510,37 @@ const TripDetails = () => {
                 </Label>
                 <Input type="text" id="sampleId" value={selectedSample} readOnly className="col-span-3" />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="sampleType" className="text-right">
-                  Type
-                </Label>
-                <Input type="text" id="sampleType" value={tripData?.samples.find((s: any) => s.id === selectedSample)?.type} readOnly className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="collectedBy" className="text-right">
-                  Collected By
-                </Label>
-                <Input type="text" id="collectedBy" value={tripData?.samples.find((s: any) => s.id === selectedSample)?.collectedBy} readOnly className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="collectionTime" className="text-right">
-                  Collection Time
-                </Label>
-                <Input type="text" id="collectionTime" value={tripData?.samples.find((s: any) => s.id === selectedSample)?.time} readOnly className="col-span-3" />
-              </div>
+              
+              {/* Find the sample across all stops */}
+              {(() => {
+                let sample;
+                for (const stop of tripData?.stopsList || []) {
+                  sample = stop.samples?.find((s: any) => s.id === selectedSample);
+                  if (sample) break;
+                }
+                return sample ? (
+                  <>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="sampleType" className="text-right">
+                        Type
+                      </Label>
+                      <Input type="text" id="sampleType" value={sample.type} readOnly className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="collectedBy" className="text-right">
+                        Collected By
+                      </Label>
+                      <Input type="text" id="collectedBy" value={sample.collectedBy} readOnly className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="collectionTime" className="text-right">
+                        Collection Time
+                      </Label>
+                      <Input type="text" id="collectionTime" value={sample.time} readOnly className="col-span-3" />
+                    </div>
+                  </>
+                ) : null;
+              })()}
             </div>
           )}
           <DialogFooter>

@@ -24,6 +24,7 @@ const TripManagement = () => {
     to: addDays(new Date(), 7),
   });
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
+  const [routeToEdit, setRouteToEdit] = useState<any | null>(null);
   
   // Filter routes based on search query
   const filterRoutes = (query: string) => {
@@ -60,6 +61,11 @@ const TripManagement = () => {
         description: `Showing trips from ${format(range.from, "PPP")} to ${format(range.to, "PPP")}`,
       });
     }
+  };
+
+  const openEditRouteDialog = (route: any) => {
+    setRouteToEdit(route);
+    setShowCreateRouteDialog(true);
   };
 
   return (
@@ -122,7 +128,10 @@ const TripManagement = () => {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            <Button size="sm" onClick={() => setShowCreateRouteDialog(true)}>
+            <Button size="sm" onClick={() => {
+              setRouteToEdit(null);
+              setShowCreateRouteDialog(true);
+            }}>
               <Plus className="mr-2 h-4 w-4" />
               Create Route
             </Button>
@@ -139,40 +148,63 @@ const TripManagement = () => {
           <TabsContent value="active" className="pt-4">
             <Card>
               <CardContent className="p-0">
-                <RoutesList status="active" searchQuery={searchQuery} dateRange={date} />
+                <RoutesList 
+                  status="active" 
+                  searchQuery={searchQuery} 
+                  dateRange={date} 
+                  onEditRoute={openEditRouteDialog}
+                />
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="upcoming" className="pt-4">
             <Card>
               <CardContent className="p-0">
-                <RoutesList status="upcoming" searchQuery={searchQuery} dateRange={date} />
+                <RoutesList 
+                  status="upcoming" 
+                  searchQuery={searchQuery} 
+                  dateRange={date} 
+                  onEditRoute={openEditRouteDialog}
+                />
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="completed" className="pt-4">
             <Card>
               <CardContent className="p-0">
-                <RoutesList status="completed" searchQuery={searchQuery} dateRange={date} />
+                <RoutesList 
+                  status="completed" 
+                  searchQuery={searchQuery} 
+                  dateRange={date} 
+                  onEditRoute={openEditRouteDialog}
+                />
               </CardContent>
             </Card>
           </TabsContent>
           <TabsContent value="routes" className="pt-4">
             <Card>
               <CardContent className="p-0">
-                <RoutesList status="all" searchQuery={searchQuery} dateRange={date} />
+                <RoutesList 
+                  status="all" 
+                  searchQuery={searchQuery} 
+                  dateRange={date} 
+                  onEditRoute={openEditRouteDialog}
+                />
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
 
-        {/* Create Route Dialog */}
+        {/* Create/Edit Route Dialog */}
         <Dialog open={showCreateRouteDialog} onOpenChange={setShowCreateRouteDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Route</DialogTitle>
+              <DialogTitle>{routeToEdit ? 'Edit Route' : 'Create New Route'}</DialogTitle>
             </DialogHeader>
-            <CreateRouteForm onCancel={() => setShowCreateRouteDialog(false)} />
+            <CreateRouteForm 
+              onCancel={() => setShowCreateRouteDialog(false)} 
+              initialData={routeToEdit}
+            />
           </DialogContent>
         </Dialog>
       </div>

@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,9 +16,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AddStopForm } from "./AddStopForm";
 import { toast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
 
 interface CreateRouteFormProps {
   onCancel: () => void;
+  initialData?: any;
 }
 
 export interface Stop {
@@ -32,8 +43,8 @@ export interface Stop {
   contactPhone?: string;
 }
 
-export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
-  const [date, setDate] = useState<Date>();
+export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps) {
+  const [date, setDate] = useState<Date | undefined>();
   const [frequencyType, setFrequencyType] = useState("one-time");
   const [stops, setStops] = useState<Stop[]>([]);
   const [showAddStopDialog, setShowAddStopDialog] = useState(false);
@@ -45,12 +56,50 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
   const [activeTab, setActiveTab] = useState("manual");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [stopToEdit, setStopToEdit] = useState<Stop | null>(null);
+  const [editMode, setEditMode] = useState("this");
+  const [showEditOptions, setShowEditOptions] = useState(false);
   
   const dummyPartners = [
     { id: 1, name: "FastTrack Logistics" },
     { id: 2, name: "MedExpress Pickup" },
     { id: 3, name: "LabConnect Services" },
   ];
+
+  // Populate form with initial data if in edit mode
+  useEffect(() => {
+    if (initialData) {
+      setRouteName(initialData.routeNo || "");
+      if (initialData.date) {
+        try {
+          setDate(parseISO(initialData.date));
+        } catch (error) {
+          console.error("Error parsing date:", error);
+        }
+      }
+      
+      // In a real app, we would fetch the stops for this route
+      // For demo purposes, let's create some dummy stops based on stopCount
+      if (initialData.stopCount > 0) {
+        const dummyStops: Stop[] = [];
+        for (let i = 1; i <= initialData.stopCount; i++) {
+          dummyStops.push({
+            id: i,
+            name: `Stop ${i}`,
+            address: `${100 + i} Main St, City`,
+            type: i % 3 === 0 ? "checkpoint" : "pickup",
+            time: `${String(8 + Math.floor(i / 2)).padStart(2, '0')}:${String((i * 10) % 60).padStart(2, '0')}`,
+            organization: i % 3 === 0 ? undefined : `Organization ${i}`,
+            contactName: `Contact Person ${i}`,
+            contactPhone: `555-${String(1000 + i).padStart(4, '0')}`,
+          });
+        }
+        setStops(dummyStops);
+      }
+      
+      // Additional fields would be populated from initialData
+      setPickupPartner(initialData.assignedTeam ? "1" : "");
+    }
+  }, [initialData]);
 
   const handleDayToggle = (day: string) => {
     if (selectedDays.includes(day)) {
@@ -121,11 +170,27 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
       return;
     }
 
-    toast({
-      title: "Route created successfully",
-      description: `${routeName} has been created with ${stops.length} stops`,
-    });
+    if (initialData) {
+      // Show edit options dialog for editing existing routes
+      setShowEditOptions(true);
+    } else {
+      // Create new route
+      toast({
+        title: "Route created successfully",
+        description: `${routeName} has been created with ${stops.length} stops`,
+      });
+      onCancel();
+    }
+  };
 
+  const handleSaveEdit = () => {
+    toast({
+      title: initialData ? `${editMode === "this" ? "Trip" : "All Linked Trips"} Updated` : "Route Created",
+      description: initialData 
+        ? `${routeName} has been updated with ${stops.length} stops` 
+        : `${routeName} has been created with ${stops.length} stops`,
+    });
+    setShowEditOptions(false);
     onCancel();
   };
 
@@ -231,7 +296,7 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
               <Calendar
                 mode="single"
                 selected={date}
-                onSelect={setDate}
+                onSelect={(newDate) => setDate(newDate)}
                 initialFocus
                 className="pointer-events-auto"
               />
@@ -405,7 +470,9 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
 
       <div className="flex justify-end space-x-2">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleCreateRoute}>Create Route</Button>
+        <Button onClick={handleCreateRoute}>
+          {initialData ? 'Save Changes' : 'Create Route'}
+        </Button>
       </div>
 
       {/* Add Stop Dialog */}
@@ -432,6 +499,40 @@ export function CreateRouteForm({ onCancel }: CreateRouteFormProps) {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Edit Options Dialog (for editing existing routes) */}
+      <AlertDialog open={showEditOptions} onOpenChange={setShowEditOptions}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Save Changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to apply these changes only to this trip or to all linked trips in this route?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => setShowEditOptions(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setEditMode("this");
+                handleSaveEdit();
+              }}
+            >
+              Edit Only This Trip
+            </Button>
+            <Button 
+              onClick={() => {
+                setEditMode("all");
+                handleSaveEdit();
+              }}
+            >
+              Edit All Linked Trips
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

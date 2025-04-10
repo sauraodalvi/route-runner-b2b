@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2, Check } from "lucide-react";
+import { MapPin, MoreHorizontal, Calendar, User, Eye, Edit, Trash2, Check, FileText, PaperclipIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,73 +15,74 @@ import { toast } from "@/hooks/use-toast";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface RoutesListProps {
   status: "active" | "upcoming" | "completed" | "all";
   searchQuery?: string;
   dateRange?: DateRange;
+  onEditRoute?: (route: any) => void;
 }
 
-export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListProps) {
-  // Mock data
-  const allRoutes = [
-    {
-      id: "TR-004-1234-12",
-      routeNo: "Route 2",
-      date: "2025-04-17",
-      timeStart: "09:10 - 11:30",
-      timeEnd: "11:15 - 01:30",
-      status: "active",
-      assignedTeam: "Transport Team 1",
-      stopCount: 5,
-      samplesCollected: 10,
-      pendingSamples: 3,
-      rejectedSamples: 1,
-    },
-    {
-      id: "TR-004-1234-13",
-      routeNo: "Route 3",
-      date: "2025-04-18",
-      timeStart: "10:15 - 12:45",
-      timeEnd: "12:30 - 02:45",
-      status: "upcoming",
-      assignedTeam: "Transport Team 2",
-      stopCount: 4,
-      samplesCollected: 8,
-      pendingSamples: 0,
-      rejectedSamples: 0,
-    },
-    {
-      id: "TR-004-1234-14",
-      routeNo: "Route 4",
-      date: "2025-04-15",
-      timeStart: "11:25 - 01:55",
-      timeEnd: "13:40 - 03:10",
-      status: "completed",
-      assignedTeam: "Transport Team 1",
-      stopCount: 6,
-      samplesCollected: 12,
-      pendingSamples: 0,
-      rejectedSamples: 2,
-    },
-    {
-      id: "TR-004-1234-15",
-      routeNo: "Route 5",
-      date: "2025-04-21",
-      timeStart: "13:30 - 03:45",
-      timeEnd: "15:45 - 05:30",
-      status: "active",
-      assignedTeam: "Transport Team 3",
-      stopCount: 3,
-      samplesCollected: 6,
-      pendingSamples: 2,
-      rejectedSamples: 0,
-    },
-  ];
+// Enhanced mock data with more dummy records
+const generateMockData = () => {
+  const statuses = ["active", "upcoming", "completed"];
+  const teams = ["Transport Team 1", "Transport Team 2", "Transport Team 3", "Transport Team 4"];
+  const routes = ["Route 1", "Route 2", "Route 3", "Route 4", "Route 5", "Route 6", "Route 7"];
+  
+  const allRoutes = [];
+  
+  // Generate 20 dummy entries
+  for (let i = 1; i <= 20; i++) {
+    const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+    const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+    const randomRoute = routes[Math.floor(Math.random() * routes.length)];
+    const randomDate = new Date();
+    randomDate.setDate(randomDate.getDate() + Math.floor(Math.random() * 30) - 15); // Between -15 and +15 days
+    
+    allRoutes.push({
+      id: `TR-004-${1234 + i}`,
+      routeNo: `${randomRoute}`,
+      date: randomDate.toISOString().split('T')[0],
+      timeStart: `${String(8 + Math.floor(Math.random() * 4)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')} - ${String(10 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+      timeEnd: `${String(12 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')} - ${String(14 + Math.floor(Math.random() * 3)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`,
+      status: randomStatus,
+      assignedTeam: randomTeam,
+      stopCount: 3 + Math.floor(Math.random() * 5),
+      samplesCollected: 4 + Math.floor(Math.random() * 10),
+      pendingSamples: Math.floor(Math.random() * 4),
+      rejectedSamples: Math.floor(Math.random() * 3),
+      notes: `This is a sample note for route ${randomRoute}. Team ${randomTeam} is assigned to this trip.`,
+      pickupPoints: ["Hospital A", "Clinic B", "Lab C"].slice(0, 1 + Math.floor(Math.random() * 2)),
+      attachments: Math.random() > 0.5 ? ["route_map.pdf", "sample_details.xlsx"] : []
+    });
+  }
+  
+  return allRoutes;
+};
 
+export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute }: RoutesListProps) {
+  // Use enhanced mock data
+  const allRoutes = generateMockData();
+  
   const [routes, setRoutes] = useState(allRoutes);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [routeToDelete, setRouteToDelete] = useState<string | null>(null);
+  const [showCancelOptions, setShowCancelOptions] = useState(false);
+  const [routeToCancel, setRouteToCancel] = useState<string | null>(null);
+  const [showViewDetails, setShowViewDetails] = useState(false);
+  const [routeDetails, setRouteDetails] = useState<any | null>(null);
+  const [showAttachment, setShowAttachment] = useState(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<string | null>(null);
 
   // Filter based on status, search query, and date range
   useEffect(() => {
@@ -142,17 +143,23 @@ export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListPr
   };
 
   const handleViewRoute = (routeId: string) => {
-    toast({
-      title: "View Route",
-      description: `Viewing details for route ${routeId}`,
-    });
+    const routeToView = routes.find(route => route.id === routeId);
+    if (routeToView) {
+      setRouteDetails(routeToView);
+      setShowViewDetails(true);
+    }
   };
 
   const handleEditRoute = (routeId: string) => {
-    toast({
-      title: "Edit Route",
-      description: `Editing route ${routeId}`,
-    });
+    const routeToEdit = routes.find(route => route.id === routeId);
+    if (routeToEdit && onEditRoute) {
+      onEditRoute(routeToEdit);
+    } else {
+      toast({
+        title: "Edit Route",
+        description: `Editing route ${routeId}`,
+      });
+    }
   };
 
   const confirmDeleteRoute = (routeId: string) => {
@@ -172,19 +179,35 @@ export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListPr
     }
   };
 
-  const handleChangeTeam = (routeId: string) => {
-    toast({
-      title: "Change Team",
-      description: `Changing team for route ${routeId}`,
-    });
+  const handleCancelTrip = () => {
+    if (routeToCancel) {
+      setRoutes(routes.map(route => 
+        route.id === routeToCancel ? { ...route, status: "completed", notes: route.notes + " (Cancelled)" } : route
+      ));
+      toast({
+        title: "Trip Cancelled",
+        description: `Trip ${routeToCancel} has been cancelled`,
+      });
+      setShowCancelOptions(false);
+      setRouteToCancel(null);
+    }
   };
 
-  const handleCancelTrip = (routeId: string) => {
-    toast({
-      title: "Trip Cancelled",
-      description: `Trip ${routeId} has been cancelled`,
-    });
-    // In a real app, we would update the status of the route
+  const handleCancelAllLinkedTrips = () => {
+    if (routeToCancel) {
+      const cancelledRouteNo = routes.find(route => route.id === routeToCancel)?.routeNo;
+      if (cancelledRouteNo) {
+        setRoutes(routes.map(route => 
+          route.routeNo === cancelledRouteNo ? { ...route, status: "completed", notes: route.notes + " (Cancelled)" } : route
+        ));
+        toast({
+          title: "All Linked Trips Cancelled",
+          description: `All trips linked to ${cancelledRouteNo} have been cancelled`,
+        });
+      }
+      setShowCancelOptions(false);
+      setRouteToCancel(null);
+    }
   };
 
   const handleMarkCompleted = (routeId: string) => {
@@ -194,6 +217,15 @@ export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListPr
     toast({
       title: "Trip Completed",
       description: `Trip ${routeId} has been marked as completed`,
+    });
+  };
+
+  const handleViewAttachment = (routeId: string, fileName: string) => {
+    setSelectedAttachment(fileName);
+    setShowAttachment(true);
+    toast({
+      title: "Viewing Attachment",
+      description: `Opening ${fileName} from route ${routeId}`,
     });
   };
 
@@ -296,24 +328,40 @@ export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListPr
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Trip
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleChangeTeam(route.id)}>
-                        <User className="h-4 w-4 mr-2" />
-                        Change Team
-                      </DropdownMenuItem>
+                      {route.attachments && route.attachments.length > 0 && (
+                        <DropdownMenuItem disabled={route.attachments.length === 0}>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="flex items-center w-full">
+                              <PaperclipIcon className="h-4 w-4 mr-2" />
+                              View Attachments ({route.attachments.length})
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              {route.attachments.map((attachment: string, index: number) => (
+                                <DropdownMenuItem key={index} onClick={() => handleViewAttachment(route.id, attachment)}>
+                                  <FileText className="h-4 w-4 mr-2" />
+                                  {attachment}
+                                </DropdownMenuItem>
+                              ))}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </DropdownMenuItem>
+                      )}
                       {route.status !== "completed" && (
-                        <>
-                          <DropdownMenuItem onClick={() => handleMarkCompleted(route.id)}>
-                            <Check className="h-4 w-4 mr-2" />
-                            Mark as Completed
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive focus:text-destructive"
-                            onClick={() => handleCancelTrip(route.id)}
-                          >
-                            Cancel Trip
-                          </DropdownMenuItem>
-                        </>
+                        <DropdownMenuItem onClick={() => handleMarkCompleted(route.id)}>
+                          <Check className="h-4 w-4 mr-2" />
+                          Mark as Completed
+                        </DropdownMenuItem>
+                      )}
+                      {route.status !== "completed" && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => {
+                            setRouteToCancel(route.id);
+                            setShowCancelOptions(true);
+                          }}
+                        >
+                          Cancel Trip
+                        </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -332,25 +380,198 @@ export function RoutesList({ status, searchQuery = "", dateRange }: RoutesListPr
         </TableBody>
       </Table>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
+      {/* View Details Dialog */}
+      <Dialog open={showViewDetails} onOpenChange={setShowViewDetails}>
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Delete Route</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this route? This action cannot be undone.
-            </DialogDescription>
+            <DialogTitle>Trip Details</DialogTitle>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteRoute}>
-              Delete
-            </Button>
-          </DialogFooter>
+          {routeDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Trip ID</h3>
+                  <p>{routeDetails.id}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Route</h3>
+                  <p>{routeDetails.routeNo}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Date</h3>
+                  <p>{formatDateDisplay(routeDetails.date)}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                  <Badge 
+                    variant={getStatusBadgeVariant(routeDetails.status) as any} 
+                    className={`
+                      ${routeDetails.status === "active" ? "bg-green-100 text-green-800" : ""}
+                      ${routeDetails.status === "upcoming" ? "bg-yellow-100 text-yellow-800" : ""}
+                      ${routeDetails.status === "completed" ? "bg-gray-100 text-gray-800" : ""}
+                    `}
+                  >
+                    {getStatusDisplayName(routeDetails.status)}
+                  </Badge>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Time Start</h3>
+                  <p>{routeDetails.timeStart}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Time End</h3>
+                  <p>{routeDetails.timeEnd}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Assigned Team</h3>
+                  <p>{routeDetails.assignedTeam}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Stop Count</h3>
+                  <p>{routeDetails.stopCount}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Samples Collected</h3>
+                  <p>{routeDetails.samplesCollected}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Samples Pending</h3>
+                  <p>{routeDetails.pendingSamples}</p>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Samples Rejected</h3>
+                  <p>{routeDetails.rejectedSamples}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500">Pickup Points</h3>
+                <ul className="mt-2 list-disc pl-5">
+                  {routeDetails.pickupPoints.map((point: string, index: number) => (
+                    <li key={index}>{point}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {routeDetails.notes && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Notes</h3>
+                  <p className="mt-2 text-sm text-gray-600">{routeDetails.notes}</p>
+                </div>
+              )}
+              
+              {routeDetails.attachments && routeDetails.attachments.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500">Attachments</h3>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {routeDetails.attachments.map((attachment: string, index: number) => (
+                      <Button 
+                        key={index} 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewAttachment(routeDetails.id, attachment)}
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        {attachment}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {routeDetails.status !== "completed" && (
+                <div className="flex justify-between pt-4 border-t">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setRouteToCancel(routeDetails.id);
+                      setShowCancelOptions(true);
+                      setShowViewDetails(false);
+                    }}
+                  >
+                    Cancel Trip
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      handleEditRoute(routeDetails.id);
+                      setShowViewDetails(false);
+                    }}
+                  >
+                    Edit Trip
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
+
+      {/* Attachment Viewer Dialog */}
+      <Dialog open={showAttachment} onOpenChange={setShowAttachment}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Attachment: {selectedAttachment}</DialogTitle>
+          </DialogHeader>
+          <div className="min-h-[60vh] flex items-center justify-center bg-gray-100 rounded-md">
+            <div className="text-center">
+              <FileText className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+              <p className="text-gray-600">Preview not available for {selectedAttachment}</p>
+              <Button className="mt-4" onClick={() => {
+                toast({
+                  title: "Download Started",
+                  description: `Downloading ${selectedAttachment}`,
+                });
+                setShowAttachment(false);
+              }}>
+                Download File
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Route</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this route? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDeleteConfirm(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleDeleteRoute}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Trip Options Dialog */}
+      <AlertDialog open={showCancelOptions} onOpenChange={setShowCancelOptions}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel Trip</AlertDialogTitle>
+            <AlertDialogDescription>
+              Do you want to cancel only this trip or all linked trips in this route?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex flex-col sm:flex-row gap-2">
+            <AlertDialogCancel onClick={() => setShowCancelOptions(false)}>
+              Back
+            </AlertDialogCancel>
+            <Button variant="outline" onClick={handleCancelTrip}>
+              Cancel This Trip Only
+            </Button>
+            <Button variant="destructive" onClick={handleCancelAllLinkedTrips}>
+              Cancel All Linked Trips
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

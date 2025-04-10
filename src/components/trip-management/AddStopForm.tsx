@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 interface AddStopFormProps {
   onSubmit: (stop: Stop) => void;
   onCancel: () => void;
+  initialData?: Stop | null;
 }
 
 const timeSlots = [
@@ -41,19 +42,34 @@ const formSchema = z.object({
   contactPhone: z.string().optional(),
 });
 
-export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
+export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      type: "pickup",
-      address: "",
-      time: "",
-      organization: "",
-      contactName: "",
-      contactPhone: "",
+      name: initialData?.name || "",
+      type: initialData?.type || "pickup",
+      address: initialData?.address || "",
+      time: initialData?.time || "",
+      organization: initialData?.organization || "",
+      contactName: initialData?.contactName || "",
+      contactPhone: initialData?.contactPhone || "",
     },
   });
+
+  // Update form values when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        name: initialData.name,
+        type: initialData.type,
+        address: initialData.address,
+        time: initialData.time || "",
+        organization: initialData.organization || "",
+        contactName: initialData.contactName || "",
+        contactPhone: initialData.contactPhone || "",
+      });
+    }
+  }, [initialData, form]);
 
   const stopType = form.watch("type");
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
@@ -61,7 +77,7 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     try {
       const stop: Stop = {
-        id: Date.now(), // Use timestamp as a unique ID
+        id: initialData?.id || Date.now(), // Use existing ID if editing, or timestamp for new
         name: values.name,
         type: values.type,
         address: values.address,
@@ -89,7 +105,7 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 mt-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="type"
@@ -182,7 +198,7 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Select time">
                     <div className="flex items-center">
-                      <Clock className="mr-2 h-4 w-4" />
+                      {field.value && <Clock className="mr-2 h-4 w-4" />}
                       <span>{field.value || "Select time"}</span>
                     </div>
                   </SelectValue>
@@ -233,7 +249,7 @@ export function AddStopForm({ onSubmit, onCancel }: AddStopFormProps) {
             Cancel
           </Button>
           <Button type="submit">
-            Add Stop
+            {initialData ? "Update Stop" : "Add Stop"}
           </Button>
         </div>
       </form>

@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, FileSpreadsheet, Filter, Download, Calendar } from "lucide-react";
+import { Plus, Download, Calendar, Filter } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, addDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const TripManagement = () => {
-  const [showCreateRoute, setShowCreateRoute] = useState(false);
+  const [showCreateRouteDialog, setShowCreateRouteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
   const [date, setDate] = React.useState<DateRange | undefined>({
@@ -121,59 +122,59 @@ const TripManagement = () => {
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            {!showCreateRoute && (
-              <Button size="sm" onClick={() => setShowCreateRoute(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Route
-              </Button>
-            )}
+            <Button size="sm" onClick={() => setShowCreateRouteDialog(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Route
+            </Button>
           </div>
         </div>
 
-        {showCreateRoute ? (
-          <Card>
-            <CardContent className="pt-6">
-              <CreateRouteForm onCancel={() => setShowCreateRoute(false)} />
-            </CardContent>
-          </Card>
-        ) : (
-          <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              <TabsTrigger value="active">Active Trips</TabsTrigger>
-              <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
-              <TabsTrigger value="completed">Completed Trips</TabsTrigger>
-              <TabsTrigger value="routes">All Routes</TabsTrigger>
-            </TabsList>
-            <TabsContent value="active" className="pt-4">
-              <Card>
-                <CardContent className="p-0">
-                  <RoutesList status="active" searchQuery={searchQuery} dateRange={date} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="upcoming" className="pt-4">
-              <Card>
-                <CardContent className="p-0">
-                  <RoutesList status="upcoming" searchQuery={searchQuery} dateRange={date} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="completed" className="pt-4">
-              <Card>
-                <CardContent className="p-0">
-                  <RoutesList status="completed" searchQuery={searchQuery} dateRange={date} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="routes" className="pt-4">
-              <Card>
-                <CardContent className="p-0">
-                  <RoutesList status="all" searchQuery={searchQuery} dateRange={date} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        )}
+        <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="active">Active Trips</TabsTrigger>
+            <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
+            <TabsTrigger value="completed">Completed Trips</TabsTrigger>
+            <TabsTrigger value="routes">All Routes</TabsTrigger>
+          </TabsList>
+          <TabsContent value="active" className="pt-4">
+            <Card>
+              <CardContent className="p-0">
+                <RoutesList status="active" searchQuery={searchQuery} dateRange={date} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="upcoming" className="pt-4">
+            <Card>
+              <CardContent className="p-0">
+                <RoutesList status="upcoming" searchQuery={searchQuery} dateRange={date} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="completed" className="pt-4">
+            <Card>
+              <CardContent className="p-0">
+                <RoutesList status="completed" searchQuery={searchQuery} dateRange={date} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          <TabsContent value="routes" className="pt-4">
+            <Card>
+              <CardContent className="p-0">
+                <RoutesList status="all" searchQuery={searchQuery} dateRange={date} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Create Route Dialog */}
+        <Dialog open={showCreateRouteDialog} onOpenChange={setShowCreateRouteDialog}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create New Route</DialogTitle>
+            </DialogHeader>
+            <CreateRouteForm onCancel={() => setShowCreateRouteDialog(false)} />
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );

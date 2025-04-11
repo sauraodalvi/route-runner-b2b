@@ -15,6 +15,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarRail,
 } from "@/components/ui/sidebar";
 import { 
   Home, 
@@ -37,12 +38,13 @@ import { Link } from "react-router-dom";
 
 export function AppSidebar() {
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center px-4">
         <img src="/lovable-uploads/ee3afa94-db6f-423a-9107-87613e9dc585.png" alt="CVK Diagnostics" className="h-10" />
         <span className="ml-2 font-bold text-lg">CVK Diagnostics</span>
       </SidebarHeader>
       <SidebarTrigger className="absolute right-2 top-4 lg:hidden" />
+      <SidebarRail />
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>

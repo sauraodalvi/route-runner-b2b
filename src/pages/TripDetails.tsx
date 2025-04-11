@@ -72,7 +72,7 @@ const TripDetails = () => {
         routeNo: "RTE-2024-123",
         routeName: "Downtown Medical Collection",
         date: "2024-07-15",
-        status: "active",
+        status: "active", // Can be 'active', 'completed', 'cancelled'
         assignedTeam: "FastTrack Logistics",
         partnerName: "MedLogistics Inc.",
         partnerContact: "+1 555-123-4567",
@@ -126,6 +126,16 @@ const TripDetails = () => {
               { id: 202, name: "Sample Photos", type: "image" }
             ]
           },
+          { 
+            id: 3, 
+            name: "Checkout Point", 
+            address: "789 Delivery St, New York, NY 10003",
+            type: "checkout",
+            notes: "Final delivery checkpoint",
+            contactName: "Logistics Manager",
+            contactPhone: "+1 555-789-1234"
+            // No samples or attachments for checkout points
+          }
         ]
       };
       setTripData(mockTripData);
@@ -159,6 +169,9 @@ const TripDetails = () => {
       title: "Trip Cancelled",
       description: `Trip ${tripData?.routeNo} has been cancelled.`,
     });
+    // Close dialog and update trip status
+    setShowCancelDialog(false);
+    setTripData((prev: any) => ({...prev, status: 'cancelled'}));
   };
 
   const handleEditTrip = () => {
@@ -167,6 +180,7 @@ const TripDetails = () => {
       title: "Trip Edited",
       description: `Trip ${tripData?.routeNo} has been edited.`,
     });
+    setShowEditDialog(false);
   };
 
   const handleOpenSampleDetails = (sampleId: string) => {
@@ -181,6 +195,10 @@ const TripDetails = () => {
 
   const openStopDetails = (stop: any) => {
     setSelectedStop(stop);
+  };
+
+  const isTripCancellable = () => {
+    return tripData?.status !== 'completed' && tripData?.status !== 'cancelled';
   };
 
   if (loading) {
@@ -203,7 +221,7 @@ const TripDetails = () => {
               Back to Trip Management
             </Link>
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-bold mr-2">{tripData?.routeName}</h1>
+              <h1 className="text-2xl font-bold mr-2">{tripData?.routeName}</h1>
               <Badge variant={getBadgeVariant(tripData?.status)}>{tripData?.status}</Badge>
             </div>
             <p className="text-sm text-muted-foreground">Trip ID: {tripData?.routeNo}</p>
@@ -213,59 +231,61 @@ const TripDetails = () => {
               <Edit className="mr-2 h-4 w-4" />
               Edit Trip
             </Button>
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={() => setShowCancelDialog(true)}
-            >
-              <XCircle className="mr-2 h-4 w-4" />
-              Cancel Trip
-            </Button>
+            {isTripCancellable() && (
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => setShowCancelDialog(true)}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancel Trip
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Trip Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Trip Information</CardTitle>
+        {/* Trip Information Card - Improved UI */}
+        <Card className="bg-white shadow-sm">
+          <CardHeader className="pb-3 border-b">
+            <CardTitle className="text-lg">Trip Information</CardTitle>
             <CardDescription>Essential details about this trip</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="space-y-4">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="space-y-5">
                 <div className="flex items-start space-x-4">
-                  <CalendarIcon className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <CalendarIcon className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Date</p>
-                    <p className="text-muted-foreground">{tripData?.date}</p>
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Date</p>
+                    <p className="font-medium">{tripData?.date}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <User className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Created By</p>
-                    <p className="text-muted-foreground">{tripData?.createdBy}</p>
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Created By</p>
+                    <p className="font-medium">{tripData?.createdBy}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-start space-x-4">
-                  <Truck className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <Truck className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Assigned Team</p>
-                    <p className="text-muted-foreground">{tripData?.assignedTeam}</p>
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Assigned Team</p>
+                    <p className="font-medium">{tripData?.assignedTeam}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <Building className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <Building className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Partner</p>
-                    <p className="text-muted-foreground">{tripData?.partnerName}</p>
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Partner</p>
+                    <p className="font-medium">{tripData?.partnerName}</p>
                     {tripData?.partnerContact && (
-                      <p className="text-sm text-muted-foreground flex items-center">
+                      <p className="text-sm text-muted-foreground flex items-center mt-1">
                         <Phone className="h-3 w-3 mr-1" />
                         {tripData.partnerContact}
                       </p>
@@ -274,20 +294,20 @@ const TripDetails = () => {
                 </div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div className="flex items-start space-x-4">
-                  <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <MapPin className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Stops</p>
-                    <p className="text-muted-foreground">{tripData?.stops}</p>
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Stops</p>
+                    <p className="font-medium">{tripData?.stops}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                  <FileText className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Samples Collected</p>
-                    <p className="text-muted-foreground">
+                    <p className="font-medium text-sm text-muted-foreground mb-1">Samples Collected</p>
+                    <p className="font-medium">
                       Total: {tripData?.samplesCollected} 
                       {tripData?.samplesRegistered !== undefined && (
                         <span className="text-sm ml-2">
@@ -303,12 +323,12 @@ const TripDetails = () => {
           </CardContent>
         </Card>
 
-        {/* Stops List - Each stop now has its own details section */}
-        <h2 className="text-lg font-semibold mt-6">Collection Stops</h2>
+        {/* Stops List - Each stop with its own details section */}
+        <h2 className="text-xl font-semibold mt-8 mb-4">Collection Stops</h2>
         <div className="space-y-6">
           {tripData?.stopsList?.map((stop: any, index: number) => (
-            <Card key={stop.id} className="overflow-hidden">
-              <CardHeader className="bg-muted/30 pb-2">
+            <Card key={stop.id} className="overflow-hidden bg-white shadow-sm">
+              <CardHeader className={`bg-muted/30 pb-2 ${stop.type === 'checkout' ? 'bg-gray-50' : ''}`}>
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center">
                     <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mr-2">
@@ -316,14 +336,21 @@ const TripDetails = () => {
                     </div>
                     <CardTitle className="text-lg">{stop.name}</CardTitle>
                   </div>
-                  <Badge variant="outline">
-                    Samples: {stop.samplesCollected}
-                    {stop.samplesRegistered !== undefined && (
-                      <span className="ml-1">
-                        ({stop.samplesRegistered}/{stop.samplesUnregistered})
-                      </span>
-                    )}
-                  </Badge>
+                  {stop.type !== 'checkout' && (
+                    <Badge variant="outline">
+                      Samples: {stop.samplesCollected}
+                      {stop.samplesRegistered !== undefined && (
+                        <span className="ml-1">
+                          ({stop.samplesRegistered}/{stop.samplesUnregistered})
+                        </span>
+                      )}
+                    </Badge>
+                  )}
+                  {stop.type === 'checkout' && (
+                    <Badge variant="outline" className="bg-gray-100">
+                      Checkout Point
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="pt-4">
@@ -358,90 +385,91 @@ const TripDetails = () => {
                   </div>
                 </div>
                 
-                {/* Tabs for samples and attachments */}
-                <Tabs defaultValue="samples" className="mt-4">
-                  <TabsList className="w-full sm:w-auto">
-                    <TabsTrigger value="samples">Samples ({stop.samples?.length || 0})</TabsTrigger>
-                    <TabsTrigger value="attachments">Attachments ({stop.attachments?.length || 0})</TabsTrigger>
-                  </TabsList>
-                  
-                  {/* Samples tab content */}
-                  <TabsContent value="samples" className="mt-4">
-                    {stop.samples && stop.samples.length > 0 ? (
-                      <div className="rounded-md border overflow-hidden">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Sample ID</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Collected By</TableHead>
-                              <TableHead>Time</TableHead>
-                              <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {stop.samples.map((sample: any) => (
-                              <TableRow key={sample.id}>
-                                <TableCell>{sample.id}</TableCell>
-                                <TableCell>{sample.type}</TableCell>
-                                <TableCell>{sample.collectedBy}</TableCell>
-                                <TableCell>{sample.time}</TableCell>
-                                <TableCell className="text-right">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm"
-                                    onClick={() => handleOpenSampleDetails(sample.id)}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Details
-                                  </Button>
-                                </TableCell>
+                {/* Only show tabs for samples and attachments if this is not a checkout point */}
+                {stop.type !== 'checkout' && (
+                  <Tabs defaultValue="samples" className="mt-6">
+                    <TabsList className="w-full sm:w-auto mb-2">
+                      <TabsTrigger value="samples">Samples ({stop.samples?.length || 0})</TabsTrigger>
+                      <TabsTrigger value="attachments">Attachments ({stop.attachments?.length || 0})</TabsTrigger>
+                    </TabsList>
+                    
+                    {/* Samples tab content */}
+                    <TabsContent value="samples" className="mt-4 pt-2">
+                      {stop.samples && stop.samples.length > 0 ? (
+                        <div className="rounded-md border overflow-hidden">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Sample ID</TableHead>
+                                <TableHead>Type</TableHead>
+                                <TableHead>Collected By</TableHead>
+                                <TableHead>Time</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No samples collected at this stop.</p>
-                    )}
-                  </TabsContent>
-                  
-                  {/* Attachments tab content */}
-                  <TabsContent value="attachments" className="mt-4">
-                    {stop.attachments && stop.attachments.length > 0 ? (
-                      <div className="space-y-2">
-                        {stop.attachments.map((attachment: any) => (
-                          <div key={attachment.id} className="flex items-center justify-between border-b pb-2">
-                            <div className="flex items-center space-x-2">
-                              {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
-                              {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
-                              {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
-                              <p className="font-medium">{attachment.name}</p>
-                              <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
+                            </TableHeader>
+                            <TableBody>
+                              {stop.samples.map((sample: any) => (
+                                <TableRow key={sample.id}>
+                                  <TableCell className="font-medium">{sample.id}</TableCell>
+                                  <TableCell>{sample.type}</TableCell>
+                                  <TableCell>{sample.collectedBy}</TableCell>
+                                  <TableCell>{sample.time}</TableCell>
+                                  <TableCell className="text-right">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      onClick={() => handleOpenSampleDetails(sample.id)}
+                                    >
+                                      <Eye className="h-4 w-4 mr-2" />
+                                      View Details
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No samples collected at this stop.</p>
+                      )}
+                    </TabsContent>
+                    
+                    {/* Attachments tab content */}
+                    <TabsContent value="attachments" className="mt-4 pt-2">
+                      {stop.attachments && stop.attachments.length > 0 ? (
+                        <div className="space-y-3">
+                          {stop.attachments.map((attachment: any) => (
+                            <div key={attachment.id} className="flex items-center justify-between border-b pb-3">
+                              <div className="flex items-center space-x-2">
+                                {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
+                                {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
+                                {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
+                                <p className="font-medium">{attachment.name}</p>
+                                <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
+                              </div>
+                              <div className="flex space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => handleViewAttachment(attachment)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => handleDownloadAttachment(attachment.id)}>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Download
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => handleViewAttachment(attachment)}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
-                              <Button variant="outline" size="sm" onClick={() => handleDownloadAttachment(attachment.id)}>
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No attachments for this stop.</p>
-                    )}
-                  </TabsContent>
-                </Tabs>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No attachments for this stop.</p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
-
       </div>
 
       {/* Edit Trip Dialog */}

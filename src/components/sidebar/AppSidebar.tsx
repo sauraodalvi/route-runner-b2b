@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Sidebar,
@@ -40,8 +39,6 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex items-center px-4">
-        <img src="/lovable-uploads/ee3afa94-db6f-423a-9107-87613e9dc585.png" alt="CVK Diagnostics" className="h-10" />
-        <span className="ml-2 font-bold text-lg">CVK Diagnostics</span>
       </SidebarHeader>
       <SidebarTrigger className="absolute right-2 top-4 lg:hidden" />
       <SidebarRail />

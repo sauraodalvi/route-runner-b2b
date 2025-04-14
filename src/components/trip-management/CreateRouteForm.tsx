@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +40,7 @@ export interface Stop {
   organization?: string;
   contactName?: string;
   contactPhone?: string;
+  inSystem?: boolean;
 }
 
 export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps) {
@@ -66,7 +66,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
     { id: 3, name: "LabConnect Services" },
   ];
 
-  // Populate form with initial data if in edit mode
   useEffect(() => {
     if (initialData) {
       setRouteName(initialData.routeNo || "");
@@ -78,8 +77,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         }
       }
       
-      // In a real app, we would fetch the stops for this route
-      // For demo purposes, let's create some dummy stops based on stopCount
       if (initialData.stopCount > 0) {
         const dummyStops: Stop[] = [];
         for (let i = 1; i <= initialData.stopCount; i++) {
@@ -92,12 +89,12 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
             organization: i % 3 === 0 ? undefined : `Organization ${i}`,
             contactName: `Contact Person ${i}`,
             contactPhone: `555-${String(1000 + i).padStart(4, '0')}`,
+            inSystem: true,
           });
         }
         setStops(dummyStops);
       }
       
-      // Additional fields would be populated from initialData
       setPickupPartner(initialData.assignedTeam ? "1" : "");
     }
   }, [initialData]);
@@ -112,7 +109,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
 
   const handleAddStop = (stop: Stop) => {
     if (stopToEdit) {
-      // Update existing stop
       setStops(stops.map(s => s.id === stopToEdit.id ? stop : s));
       setStopToEdit(null);
       toast({
@@ -120,7 +116,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         description: `${stop.name} has been updated`,
       });
     } else {
-      // Add new stop
       setStops([...stops, { ...stop, id: Date.now() }]);
       toast({
         title: "Stop added successfully",
@@ -149,7 +144,7 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
       (direction === 'up' && stopIndex === 0) || 
       (direction === 'down' && stopIndex === stops.length - 1)
     ) {
-      return; // Can't move further
+      return;
     }
     
     const newStops = [...stops];
@@ -194,10 +189,8 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
     }
 
     if (initialData) {
-      // Show edit options dialog for editing existing routes
       setShowEditOptions(true);
     } else {
-      // Create new route
       toast({
         title: "Route created successfully",
         description: `${routeName} has been created with ${stops.length} stops`,
@@ -229,7 +222,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
   };
 
   const handleDownloadTemplate = () => {
-    // In a real app, this would generate and download a CSV template
     const csvContent = "Stop Name,Address,Type,Time,Organization,Contact Name,Contact Phone\nExample Hospital,123 Main St,pickup,09:00 AM,1,John Doe,555-123-4567\nCheckpoint 1,456 Park Ave,checkpoint,10:00 AM,,Jane Smith,555-987-6543";
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
@@ -250,7 +242,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check if it's a CSV file
     if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
       toast({
         title: "Invalid file format",
@@ -260,8 +251,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
       return;
     }
 
-    // In a real app, we would parse the CSV file here
-    // For demo purposes, we'll simulate adding some stops
     const mockStopsFromCsv = [
       {
         id: Date.now() + 1,
@@ -291,7 +280,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
       description: `${mockStopsFromCsv.length} stops have been added from the file`,
     });
 
-    // Clear the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -650,7 +638,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         </div>
       )}
 
-      {/* Add Stop Dialog */}
       <Dialog 
         open={showAddStopDialog} 
         onOpenChange={(open) => {
@@ -675,7 +662,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         </DialogContent>
       </Dialog>
 
-      {/* Edit Options Dialog (for editing existing routes) */}
       <AlertDialog open={showEditOptions} onOpenChange={setShowEditOptions}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -713,7 +699,6 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Cancel Trip Options Dialog */}
       <AlertDialog open={showCancelOptions} onOpenChange={setShowCancelOptions}>
         <AlertDialogContent>
           <AlertDialogHeader>

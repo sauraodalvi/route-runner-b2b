@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +69,6 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
     },
   });
 
-  // Update form values when initialData changes
   useEffect(() => {
     if (initialData) {
       form.reset({
@@ -90,7 +88,6 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
   const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
   const [selectedOrgInSystem, setSelectedOrgInSystem] = useState<boolean | null>(null);
 
-  // Auto-populate address when organization is selected
   useEffect(() => {
     if (orgId) {
       const selectedOrg = organizations.find(org => org.id === orgId);
@@ -105,7 +102,7 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     try {
       const stop: Stop = {
-        id: initialData?.id || Date.now(), // Use existing ID if editing, or timestamp for new
+        id: initialData?.id || Date.now(),
         name: values.name,
         type: values.type,
         address: values.address,
@@ -116,11 +113,9 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
         inSystem: selectedOrgInSystem || false,
       };
       
-      // Simulate updating organization in Organization Management
       if (values.organization) {
         const orgIndex = organizations.findIndex(org => org.id === values.organization);
         if (orgIndex !== -1 && organizations[orgIndex].address !== values.address) {
-          // This would update the organization's address in a real implementation
           toast({
             title: "Organization Updated",
             description: `Address updated in Organization Management for ${organizations[orgIndex].name}`,

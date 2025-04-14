@@ -39,7 +39,6 @@ export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
                       <Badge 
                         className={`ml-2 ${stop.inSystem ? "bg-green-500" : "bg-orange-500"}`}
                         variant="secondary"
-                        size="sm"
                       >
                         {stop.inSystem ? "In System" : "Not in System"}
                       </Badge>

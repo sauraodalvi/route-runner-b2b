@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
@@ -69,21 +70,6 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
     
     return () => clearTimeout(timer);
   }, []);
-
-  const optimizeRoute = () => {
-    toast({
-      title: "Route Optimization",
-      description: "Reordering stops based on shortest distance...",
-    });
-    
-    // Simulate optimization delay
-    setTimeout(() => {
-      toast({
-        title: "Optimization Complete",
-        description: "Your route has been optimized for efficient travel.",
-      });
-    }, 2000);
-  };
 
   if (loading || !mapLoaded) {
     return (

@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X, Edit, Trash2, RotateCw } from "lucide-react";
+import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X, Edit, Trash2, RotateCw, Undo2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -47,6 +47,8 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
   const [date, setDate] = useState<Date | undefined>();
   const [frequencyType, setFrequencyType] = useState("one-time");
   const [stops, setStops] = useState<Stop[]>([]);
+  const [originalStops, setOriginalStops] = useState<Stop[]>([]);
+  const [isOptimized, setIsOptimized] = useState(false);
   const [showAddStopDialog, setShowAddStopDialog] = useState(false);
   const [routeName, setRouteName] = useState("");
   const [endAfter, setEndAfter] = useState("");
@@ -286,6 +288,10 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
   };
 
   const handleOptimizeRoute = () => {
+    if (!isOptimized) {
+      setOriginalStops([...stops]);
+    }
+    
     toast({
       title: "Route Optimization",
       description: "Reordering stops based on shortest distance...",
@@ -294,12 +300,23 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
     setTimeout(() => {
       const optimizedStops = [...stops].sort((a, b) => a.name.localeCompare(b.name));
       setStops(optimizedStops);
+      setIsOptimized(true);
       
       toast({
         title: "Optimization Complete",
         description: "Your route has been optimized for efficient travel.",
       });
     }, 2000);
+  };
+
+  const handleRevertToOriginal = () => {
+    setStops([...originalStops]);
+    setIsOptimized(false);
+    
+    toast({
+      title: "Route Reverted",
+      description: "Your route has been reverted to the original order.",
+    });
   };
 
   return (
@@ -443,10 +460,19 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                 <span className="text-sm font-medium">Stops ({stops.length})</span>
                 <div className="flex space-x-2">
                   {stops.length >= 2 && (
-                    <Button size="sm" variant="outline" onClick={handleOptimizeRoute}>
-                      <RotateCw className="mr-2 h-4 w-4" />
-                      Optimize Route
-                    </Button>
+                    <>
+                      {isOptimized ? (
+                        <Button size="sm" variant="outline" onClick={handleRevertToOriginal}>
+                          <Undo2 className="mr-2 h-4 w-4" />
+                          Revert to Original Order
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={handleOptimizeRoute}>
+                          <RotateCw className="mr-2 h-4 w-4" />
+                          Optimize Route
+                        </Button>
+                      )}
+                    </>
                   )}
                   <Button size="sm" variant="outline" onClick={() => {
                     setStopToEdit(null);
@@ -549,10 +575,17 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
               </div>
               {stops.length >= 2 && (
                 <div className="mt-4 mb-4 flex justify-end">
-                  <Button size="sm" variant="outline" onClick={handleOptimizeRoute}>
-                    <RotateCw className="mr-2 h-4 w-4" />
-                    Optimize Route
-                  </Button>
+                  {isOptimized ? (
+                    <Button size="sm" variant="outline" onClick={handleRevertToOriginal}>
+                      <Undo2 className="mr-2 h-4 w-4" />
+                      Revert to Original Order
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={handleOptimizeRoute}>
+                      <RotateCw className="mr-2 h-4 w-4" />
+                      Optimize Route
+                    </Button>
+                  )}
                 </div>
               )}
               {stops.length > 0 && (

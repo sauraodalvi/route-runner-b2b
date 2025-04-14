@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "react-day-picker";
-import { MapPin, RotateCw } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
@@ -146,14 +145,6 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
             ))}
           </div>
         </div>
-      </div>
-      
-      {/* Optimize Route Button */}
-      <div className="absolute top-4 right-4">
-        <Button onClick={optimizeRoute}>
-          <RotateCw className="mr-2 h-4 w-4" />
-          Optimize Route
-        </Button>
       </div>
       
       {/* Note when no stops are added */}

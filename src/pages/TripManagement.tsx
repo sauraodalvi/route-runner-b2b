@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -39,10 +38,8 @@ const TripManagement = () => {
   const [showBulkUploadDialog, setShowBulkUploadDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Filter routes based on search query
   const filterRoutes = (query: string) => {
     setSearchQuery(query);
-    // In a real app, this would filter the routes based on the query
     toast({
       title: "Search applied",
       description: `Showing results for "${query}"`,
@@ -50,14 +47,12 @@ const TripManagement = () => {
   };
 
   const handleExport = () => {
-    // In a real app, this would export the routes as an Excel file
     const currentDate = new Date().toLocaleDateString().replace(/\//g, '-');
     toast({
       title: "Export Started",
       description: `Your data is being exported to Excel as routes-${currentDate}.xlsx`,
     });
     
-    // Simulate download delay
     setTimeout(() => {
       toast({
         title: "Export Completed",
@@ -92,13 +87,11 @@ const TripManagement = () => {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // In a real app, this would process the CSV file
       toast({
         title: "Bulk Upload Processing",
         description: `Processing ${file.name}...`,
       });
       
-      // Simulate processing delay
       setTimeout(() => {
         toast({
           title: "Bulk Upload Complete",
@@ -113,13 +106,11 @@ const TripManagement = () => {
   };
 
   const downloadCSVTemplate = () => {
-    // In a real app, this would download the CSV template
     toast({
       title: "Download Started",
       description: "Downloading CSV template for bulk upload...",
     });
     
-    // Simulate download delay
     setTimeout(() => {
       toast({
         title: "Download Completed",
@@ -316,7 +307,6 @@ const TripManagement = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Create/Edit Route Dialog */}
         <Dialog open={showCreateRouteDialog} onOpenChange={setShowCreateRouteDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -329,7 +319,6 @@ const TripManagement = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Bulk Upload Dialog */}
         <Dialog open={showBulkUploadDialog} onOpenChange={setShowBulkUploadDialog}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
@@ -371,8 +360,7 @@ const TripManagement = () => {
                 <p className="flex items-start">
                   <MapPin className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-orange-500" />
                   <span>
-                    New organizations will be created in the system with an <span className="font-medium text-orange-500">"Not in System"</span> tag. 
-                    You can update their details later in Organization Management.
+                    New organizations will be not be created in the system. You can update their details later in Organization Management if required.
                   </span>
                 </p>
               </div>

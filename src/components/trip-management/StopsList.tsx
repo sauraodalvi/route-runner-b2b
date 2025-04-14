@@ -33,7 +33,18 @@ export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
                   {index + 1}
                 </div>
                 <div className="ml-2">
-                  <div className="font-medium text-sm">{stop.name}</div>
+                  <div className="font-medium text-sm flex items-center">
+                    {stop.name}
+                    {stop.type === "pickup" && stop.organization && (
+                      <Badge 
+                        className={`ml-2 ${stop.inSystem ? "bg-green-500" : "bg-orange-500"}`}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        {stop.inSystem ? "In System" : "Not in System"}
+                      </Badge>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground flex items-center">
                     <MapPin className="h-3 w-3 mr-1" />
                     {stop.address}

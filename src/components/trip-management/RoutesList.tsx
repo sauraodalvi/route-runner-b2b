@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -271,6 +270,7 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute, o
             <TableHead>Samples Collected</TableHead>
             <TableHead>Pending Samples</TableHead>
             <TableHead>Rejected Samples</TableHead>
+            <TableHead>Attachments</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -299,6 +299,24 @@ export function RoutesList({ status, searchQuery = "", dateRange, onEditRoute, o
               <TableCell className="text-center">{route.samplesCollected}</TableCell>
               <TableCell className="text-center">{route.pendingSamples}</TableCell>
               <TableCell className="text-center">{route.rejectedSamples}</TableCell>
+              <TableCell>
+                {route.attachments && route.attachments.length > 0 ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="flex items-center"
+                    onClick={() => {
+                      setSelectedAttachment(route.attachments[0]);
+                      setShowAttachment(true);
+                    }}
+                  >
+                    <PaperclipIcon className="h-4 w-4 mr-1" />
+                    {route.attachments.length}
+                  </Button>
+                ) : (
+                  <span className="text-muted-foreground text-sm">-</span>
+                )}
+              </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button 

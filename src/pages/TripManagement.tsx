@@ -1,27 +1,68 @@
-import React, { useState, useRef } from "react";
+
+import React, { useState, useRef, useEffect } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Calendar as CalendarIcon, Filter, Upload, MapPin, LayoutGrid, Map } from "lucide-react";
+import { Plus, Download, Calendar as CalendarIcon, Filter, Map, LayoutGrid } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addDays } from "date-fns";
-import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { Calendar } from "@/components/ui/calendar";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger 
-} from "@/components/ui/tooltip";
 import { RouterMapView } from "@/components/trip-management/RouterMapView";
+import { Route } from "@/types";
+
+// Mock data for routes
+const mockRoutes: Route[] = [
+  {
+    id: "1",
+    tripId: "TR-001-1234",
+    name: "Downtown Medical Collection",
+    date: "2025-04-17",
+    startTime: "08:00 AM",
+    endTime: "12:30 PM",
+    status: "active",
+    assignedTeam: "Team Alpha",
+    stopCount: 5,
+    samplesCollected: 12,
+    unregisteredSamples: 3,
+    attachments: "2 files"
+  },
+  {
+    id: "2",
+    tripId: "TR-002-5678",
+    name: "Uptown Labs Pickup",
+    date: "2025-04-19",
+    startTime: "09:15 AM",
+    endTime: "02:45 PM",
+    status: "upcoming",
+    assignedTeam: "Team Beta",
+    stopCount: 8,
+    samplesCollected: 18,
+    unregisteredSamples: 2,
+    attachments: "1 file"
+  },
+  {
+    id: "3",
+    tripId: "TR-003-9012",
+    name: "Hospital Circuit",
+    date: "2025-04-15",
+    startTime: "07:30 AM",
+    endTime: "03:15 PM",
+    status: "completed",
+    assignedTeam: "Team Gamma",
+    stopCount: 12,
+    samplesCollected: 25,
+    unregisteredSamples: 0,
+    attachments: "4 files"
+  }
+];
 
 const TripManagement = () => {
   const navigate = useNavigate();
@@ -35,8 +76,7 @@ const TripManagement = () => {
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [routeToEdit, setRouteToEdit] = useState<any | null>(null);
   const [showMapView, setShowMapView] = useState(false);
-  const [showBulkUploadDialog, setShowBulkUploadDialog] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [routes, setRoutes] = useState<Route[]>(mockRoutes);
   
   const filterRoutes = (query: string) => {
     setSearchQuery(query);
@@ -82,6 +122,14 @@ const TripManagement = () => {
 
   const toggleView = () => {
     setShowMapView(!showMapView);
+  };
+
+  // Filter routes based on active tab
+  const getRoutesForTab = (tabStatus: string) => {
+    if (tabStatus === 'all') {
+      return routes;
+    }
+    return routes.filter(route => route.status === tabStatus);
   };
 
   return (
@@ -174,7 +222,7 @@ const TripManagement = () => {
             <TabsTrigger value="active">Active Trips</TabsTrigger>
             <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
             <TabsTrigger value="completed">Completed Trips</TabsTrigger>
-            <TabsTrigger value="routes">All Routes</TabsTrigger>
+            <TabsTrigger value="all">All Routes</TabsTrigger>
           </TabsList>
           <TabsContent value="active" className="pt-4">
             <Card>
@@ -185,6 +233,7 @@ const TripManagement = () => {
                   </div>
                 ) : (
                   <RoutesList 
+                    routes={getRoutesForTab('active')}
                     status="active" 
                     searchQuery={searchQuery} 
                     dateRange={date} 
@@ -204,6 +253,7 @@ const TripManagement = () => {
                   </div>
                 ) : (
                   <RoutesList 
+                    routes={getRoutesForTab('upcoming')}
                     status="upcoming" 
                     searchQuery={searchQuery} 
                     dateRange={date} 
@@ -223,6 +273,7 @@ const TripManagement = () => {
                   </div>
                 ) : (
                   <RoutesList 
+                    routes={getRoutesForTab('completed')}
                     status="completed" 
                     searchQuery={searchQuery} 
                     dateRange={date} 
@@ -233,7 +284,7 @@ const TripManagement = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="routes" className="pt-4">
+          <TabsContent value="all" className="pt-4">
             <Card>
               <CardContent className="p-0">
                 {showMapView ? (
@@ -242,6 +293,7 @@ const TripManagement = () => {
                   </div>
                 ) : (
                   <RoutesList 
+                    routes={getRoutesForTab('all')}
                     status="all" 
                     searchQuery={searchQuery} 
                     dateRange={date} 

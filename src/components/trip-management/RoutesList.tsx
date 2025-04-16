@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Table,
@@ -10,8 +11,14 @@ import {
 import { Route } from "@/types";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, MapPin } from "lucide-react";
+import { Eye, Edit, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 
 interface RoutesListProps {
   routes: Route[];
@@ -23,14 +30,17 @@ interface RoutesListProps {
 }
 
 const RoutesList = ({
-  routes,
+  routes = [], // Provide default empty array to prevent undefined errors
   status,
   searchQuery,
   dateRange,
   onEditRoute,
   onViewDetails,
 }: RoutesListProps) => {
-  const filteredRoutes = routes.filter((route) => {
+  // Check if routes is undefined or null and default to empty array
+  const routesToFilter = routes || [];
+  
+  const filteredRoutes = routesToFilter.filter((route) => {
     const searchRegex = new RegExp(searchQuery, "i");
     const matchesSearch =
       searchRegex.test(route.tripId) || searchRegex.test(route.name);
@@ -67,41 +77,73 @@ const RoutesList = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredRoutes.map((route) => (
-            <TableRow key={route.id} className="hover:bg-gray-50/50">
-              <TableCell className="font-medium">{route.tripId}</TableCell>
-              <TableCell>{route.name}</TableCell>
-              <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
-              <TableCell>{route.startTime}</TableCell>
-              {status !== 'active' && <TableCell>{route.endTime}</TableCell>}
-              <TableCell>
-                <Badge>{route.status}</Badge>
-              </TableCell>
-              <TableCell>{route.assignedTeam}</TableCell>
-              <TableCell className="text-center">{route.stopCount}</TableCell>
-              <TableCell className="text-center">{route.samplesCollected}</TableCell>
-              <TableCell className="text-center">{route.unregisteredSamples}</TableCell>
-              <TableCell>{route.attachments || '-'}</TableCell>
-              <TableCell className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onViewDetails(route.id)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEditRoute(route)}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
+          {filteredRoutes.length > 0 ? (
+            filteredRoutes.map((route) => (
+              <TableRow key={route.id} className="hover:bg-gray-50/50">
+                <TableCell className="font-medium">{route.tripId}</TableCell>
+                <TableCell>{route.name}</TableCell>
+                <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
+                <TableCell>{route.startTime}</TableCell>
+                {status !== 'active' && <TableCell>{route.endTime}</TableCell>}
+                <TableCell>
+                  <Badge>{route.status}</Badge>
+                </TableCell>
+                <TableCell>{route.assignedTeam}</TableCell>
+                <TableCell className="text-center">{route.stopCount}</TableCell>
+                <TableCell className="text-center">{route.samplesCollected}</TableCell>
+                <TableCell className="text-center">{route.unregisteredSamples}</TableCell>
+                <TableCell>
+                  {route.attachments ? (
+                    <span className="text-primary">{route.attachments}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">-</span>
+                  )}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onViewDetails(route.id)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span className="sr-only">View</span>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEditRoute(route)}
+                    >
+                      <Edit className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">More</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onViewDetails(route.id)}>
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onEditRoute(route)}>
+                          Edit Route
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={status === 'active' ? 11 : 12} className="text-center py-6 text-muted-foreground">
+                No routes found. Try adjusting your search criteria.
               </TableCell>
             </TableRow>
-          ))}
+          )}
         </TableBody>
       </Table>
     </div>

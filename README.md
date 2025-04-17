@@ -1,8 +1,18 @@
-# Welcome to your Lovable project
+# Route Runner B2B
 
-## Project info
+A logistics management application for B2B sample collection and delivery.
 
-**URL**: https://lovable.dev/projects/5e1159d8-b497-4a4b-a16d-788c9085fb5f
+## Features
+
+- Trip Management
+- Pickup Partner Map View
+- Sample Collection Tracking
+- Route Optimization
+- Attachment Management
+
+## Live Demo
+
+Visit the live demo at: [https://YOUR_USERNAME.github.io/route-runner-b2b/](https://YOUR_USERNAME.github.io/route-runner-b2b/)
 
 ## How can I edit this code?
 
@@ -60,14 +70,18 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Deployment
 
-Simply open [Lovable](https://lovable.dev/projects/5e1159d8-b497-4a4b-a16d-788c9085fb5f) and click on Share -> Publish.
+This project is configured for deployment to GitHub Pages:
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+# Build and deploy to GitHub Pages
+npm run deploy
+```
 
-Yes it is!
+After deployment, the application will be available at:
+https://YOUR_USERNAME.github.io/route-runner-b2b/
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+MIT

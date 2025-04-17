@@ -2,7 +2,6 @@
   "name": "route-runner-b2b",
   "private": true,
   "version": "0.1.0",
-  "homepage": "https://route-runner-b2b.github.io",
   "type": "module",
   "scripts": {
     "dev": "vite",

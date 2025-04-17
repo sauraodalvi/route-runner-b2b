@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -73,6 +72,46 @@ const mockRoutes: Route[] = [
         time: "10:45 AM",
         status: "on-time",
         notes: "Verification point"
+      },
+      {
+        id: 4,
+        name: "Downtown Clinic",
+        address: "101 First Ave, New York, NY 10004",
+        type: "pickup",
+        time: "11:30 AM",
+        status: "critical",
+        samplesCollected: 4,
+        samplesRegistered: 1,
+        samplesUnregistered: 3,
+        contactName: "Dr. Roberts",
+        contactPhone: "555-234-5678",
+        organization: "3",
+        inSystem: true,
+        notes: "Urgent samples, high priority"
+      },
+      {
+        id: 5,
+        name: "West Side Medical",
+        address: "202 West End, New York, NY 10005",
+        type: "pickup",
+        time: "12:15 PM",
+        status: "on-time",
+        samplesCollected: 3,
+        samplesRegistered: 3,
+        samplesUnregistered: 0,
+        contactName: "Lab Technician Brown",
+        contactPhone: "555-345-6789",
+        organization: "1",
+        inSystem: true
+      },
+      {
+        id: 6,
+        name: "Checkpoint Beta",
+        address: "303 Midtown Blvd, New York, NY 10006",
+        type: "checkpoint",
+        time: "12:45 PM",
+        status: "on-time",
+        notes: "Final verification point"
       }
     ]
   },
@@ -120,6 +159,30 @@ const mockRoutes: Route[] = [
         organization: "4",
         inSystem: false,
         notes: "New client, first pickup"
+      },
+      {
+        id: 3,
+        name: "Northside Clinic",
+        address: "333 North End, New York, NY 10028",
+        type: "pickup",
+        time: "12:30 PM",
+        status: "on-time",
+        samplesCollected: 6,
+        samplesRegistered: 6,
+        samplesUnregistered: 0,
+        contactName: "Clinic Director",
+        contactPhone: "555-666-7777",
+        organization: "2",
+        inSystem: true
+      },
+      {
+        id: 4,
+        name: "Checkpoint Gamma",
+        address: "444 Uptown Ave, New York, NY 10029",
+        type: "checkpoint",
+        time: "01:15 PM",
+        status: "on-time",
+        notes: "Mid-route verification"
       }
     ]
   },

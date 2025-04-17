@@ -13,6 +13,25 @@ export interface Route {
   samplesCollected: number;
   unregisteredSamples: number;
   attachments?: string;
+  stops?: Stop[];
+}
+
+// Define the Stop interface
+export interface Stop {
+  id: number;
+  name: string;
+  address: string;
+  type: "pickup" | "checkpoint" | string;
+  time?: string;
+  status?: "on-time" | "delayed" | "critical" | string;
+  samplesCollected?: number;
+  samplesRegistered?: number;
+  samplesUnregistered?: number;
+  contactName?: string;
+  contactPhone?: string;
+  organization?: string;
+  inSystem?: boolean;
+  notes?: string;
 }
 
 // Add other type definitions as needed

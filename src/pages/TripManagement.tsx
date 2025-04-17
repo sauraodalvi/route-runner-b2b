@@ -32,7 +32,49 @@ const mockRoutes: Route[] = [
     stopCount: 5,
     samplesCollected: 12,
     unregisteredSamples: 3,
-    attachments: "2 files"
+    attachments: "2 files",
+    stops: [
+      {
+        id: 1,
+        name: "Central Hospital",
+        address: "123 Main St, New York, NY 10001",
+        type: "pickup",
+        time: "08:15 AM",
+        status: "on-time",
+        samplesCollected: 5,
+        samplesRegistered: 4,
+        samplesUnregistered: 1,
+        contactName: "Dr. Johnson",
+        contactPhone: "555-123-4567",
+        organization: "1",
+        inSystem: true,
+        notes: "Regular pickup location"
+      },
+      {
+        id: 2,
+        name: "City Medical Center",
+        address: "456 Park Ave, New York, NY 10002",
+        type: "pickup",
+        time: "09:30 AM",
+        status: "delayed",
+        samplesCollected: 7,
+        samplesRegistered: 5,
+        samplesUnregistered: 2,
+        contactName: "Nurse Williams",
+        contactPhone: "555-987-6543",
+        organization: "2",
+        inSystem: true
+      },
+      {
+        id: 3,
+        name: "Checkpoint Alpha",
+        address: "789 Cross St, New York, NY 10003",
+        type: "checkpoint",
+        time: "10:45 AM",
+        status: "on-time",
+        notes: "Verification point"
+      }
+    ]
   },
   {
     id: "2",
@@ -46,7 +88,40 @@ const mockRoutes: Route[] = [
     stopCount: 8,
     samplesCollected: 18,
     unregisteredSamples: 2,
-    attachments: "1 file"
+    attachments: "1 file",
+    stops: [
+      {
+        id: 1,
+        name: "Uptown Medical Lab",
+        address: "987 North St, New York, NY 10025",
+        type: "pickup",
+        time: "09:30 AM",
+        status: "on-time",
+        samplesCollected: 10,
+        samplesRegistered: 9,
+        samplesUnregistered: 1,
+        contactName: "Lab Director Smith",
+        contactPhone: "555-444-3333",
+        organization: "3",
+        inSystem: true
+      },
+      {
+        id: 2,
+        name: "University Hospital",
+        address: "222 College Ave, New York, NY 10027",
+        type: "pickup",
+        time: "11:00 AM",
+        status: "on-time",
+        samplesCollected: 8,
+        samplesRegistered: 7,
+        samplesUnregistered: 1,
+        contactName: "Dr. Thompson",
+        contactPhone: "555-222-1111",
+        organization: "4",
+        inSystem: false,
+        notes: "New client, first pickup"
+      }
+    ]
   },
   {
     id: "3",
@@ -60,7 +135,63 @@ const mockRoutes: Route[] = [
     stopCount: 12,
     samplesCollected: 25,
     unregisteredSamples: 0,
-    attachments: "4 files"
+    attachments: "4 files",
+    stops: [
+      {
+        id: 1,
+        name: "General Hospital",
+        address: "333 Health St, New York, NY 10012",
+        type: "pickup",
+        time: "08:00 AM",
+        status: "on-time",
+        samplesCollected: 12,
+        samplesRegistered: 12,
+        samplesUnregistered: 0,
+        contactName: "Hospital Administrator",
+        contactPhone: "555-888-7777",
+        organization: "1",
+        inSystem: true
+      },
+      {
+        id: 2,
+        name: "Checkpoint Beta",
+        address: "444 Safety Rd, New York, NY 10013",
+        type: "checkpoint",
+        time: "09:45 AM",
+        status: "on-time"
+      },
+      {
+        id: 3,
+        name: "Eastside Clinic",
+        address: "555 East St, New York, NY 10014",
+        type: "pickup",
+        time: "11:30 AM",
+        status: "delayed",
+        samplesCollected: 8,
+        samplesRegistered: 8,
+        samplesUnregistered: 0,
+        contactName: "Clinic Manager",
+        contactPhone: "555-333-2222",
+        organization: "2",
+        inSystem: true,
+        notes: "Delayed due to clinic procedures"
+      },
+      {
+        id: 4,
+        name: "Riverside Medical",
+        address: "666 West St, New York, NY 10015",
+        type: "pickup",
+        time: "01:30 PM",
+        status: "on-time",
+        samplesCollected: 5,
+        samplesRegistered: 5,
+        samplesUnregistered: 0,
+        contactName: "Dr. Rodriguez",
+        contactPhone: "555-111-0000",
+        organization: "3",
+        inSystem: true
+      }
+    ]
   }
 ];
 

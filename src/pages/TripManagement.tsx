@@ -10,15 +10,16 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addDays } from "date-fns";
+import { Route } from "@/types";
 import { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { Calendar } from "@/components/ui/calendar";
+import { sampleRoutes } from "@/data/sampleRoutes";
 import { RouterMapView } from "@/components/trip-management/RouterMapView";
-import { Route } from "@/types";
 
-// Mock data for routes
-const mockRoutes: Route[] = [
+// Use sample data from our data file
+const mockRoutes: Route[] = sampleRoutes.length > 0 ? sampleRoutes : [
   {
     id: "1",
     tripId: "TR-001-1234",
@@ -271,7 +272,13 @@ const TripManagement = () => {
   const [routeToEdit, setRouteToEdit] = useState<any | null>(null);
   const [showMapView, setShowMapView] = useState(false);
   const [routes, setRoutes] = useState<Route[]>(mockRoutes);
-  
+
+  // Log routes when they change
+  useEffect(() => {
+    console.log('Routes initialized:', routes);
+    console.log('Sample routes:', sampleRoutes);
+  }, [routes]);
+
   const filterRoutes = (query: string) => {
     setSearchQuery(query);
     toast({
@@ -286,7 +293,7 @@ const TripManagement = () => {
       title: "Export Started",
       description: `Your data is being exported to Excel as routes-${currentDate}.xlsx`,
     });
-    
+
     setTimeout(() => {
       toast({
         title: "Export Completed",
@@ -320,10 +327,17 @@ const TripManagement = () => {
 
   // Filter routes based on active tab
   const getRoutesForTab = (tabStatus: string) => {
+    console.log('Current routes:', routes);
+    console.log('Tab status:', tabStatus);
+
     if (tabStatus === 'all') {
+      console.log('Returning all routes:', routes);
       return routes;
     }
-    return routes.filter(route => route.status === tabStatus);
+
+    const filteredRoutes = routes.filter(route => route.status === tabStatus);
+    console.log('Filtered routes:', filteredRoutes);
+    return filteredRoutes;
   };
 
   return (
@@ -333,8 +347,8 @@ const TripManagement = () => {
           <h1 className="text-xl font-bold">Trip Management</h1>
           <div className="flex space-x-2">
             <div className="relative w-64">
-              <Input 
-                placeholder="Search trips..." 
+              <Input
+                placeholder="Search trips..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
@@ -344,14 +358,14 @@ const TripManagement = () => {
                 }}
                 className="pr-8"
               />
-              <button 
+              <button
                 className="absolute inset-y-0 right-0 flex items-center pr-3"
                 onClick={() => filterRoutes(searchQuery)}
               >
                 <Filter className="h-4 w-4 text-gray-400 hover:text-gray-600" />
               </button>
             </div>
-            
+
             <Popover open={showDateRangePicker} onOpenChange={setShowDateRangePicker}>
               <PopoverTrigger asChild>
                 <Button variant="outline" size="sm">
@@ -381,7 +395,7 @@ const TripManagement = () => {
                 />
               </PopoverContent>
             </Popover>
-            
+
             <Button variant="outline" size="sm" onClick={toggleView}>
               {showMapView ? (
                 <>
@@ -395,12 +409,12 @@ const TripManagement = () => {
                 </>
               )}
             </Button>
-            
+
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
               Export
             </Button>
-            
+
             <Button size="sm" onClick={() => {
               setRouteToEdit(null);
               setShowCreateRouteDialog(true);
@@ -416,7 +430,7 @@ const TripManagement = () => {
             <TabsTrigger value="active">Active Trips</TabsTrigger>
             <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
             <TabsTrigger value="completed">Completed Trips</TabsTrigger>
-            <TabsTrigger value="all">All Routes</TabsTrigger>
+            <TabsTrigger value="all">All Trips</TabsTrigger>
           </TabsList>
           <TabsContent value="active" className="pt-4">
             <Card>
@@ -426,11 +440,11 @@ const TripManagement = () => {
                     <RouterMapView status="active" searchQuery={searchQuery} dateRange={date} />
                   </div>
                 ) : (
-                  <RoutesList 
+                  <RoutesList
                     routes={getRoutesForTab('active')}
-                    status="active" 
-                    searchQuery={searchQuery} 
-                    dateRange={date} 
+                    status="active"
+                    searchQuery={searchQuery}
+                    dateRange={date}
                     onEditRoute={openEditRouteDialog}
                     onViewDetails={viewTripDetails}
                   />
@@ -446,11 +460,11 @@ const TripManagement = () => {
                     <RouterMapView status="upcoming" searchQuery={searchQuery} dateRange={date} />
                   </div>
                 ) : (
-                  <RoutesList 
+                  <RoutesList
                     routes={getRoutesForTab('upcoming')}
-                    status="upcoming" 
-                    searchQuery={searchQuery} 
-                    dateRange={date} 
+                    status="upcoming"
+                    searchQuery={searchQuery}
+                    dateRange={date}
                     onEditRoute={openEditRouteDialog}
                     onViewDetails={viewTripDetails}
                   />
@@ -466,11 +480,11 @@ const TripManagement = () => {
                     <RouterMapView status="completed" searchQuery={searchQuery} dateRange={date} />
                   </div>
                 ) : (
-                  <RoutesList 
+                  <RoutesList
                     routes={getRoutesForTab('completed')}
-                    status="completed" 
-                    searchQuery={searchQuery} 
-                    dateRange={date} 
+                    status="completed"
+                    searchQuery={searchQuery}
+                    dateRange={date}
                     onEditRoute={openEditRouteDialog}
                     onViewDetails={viewTripDetails}
                   />
@@ -486,11 +500,11 @@ const TripManagement = () => {
                     <RouterMapView status="all" searchQuery={searchQuery} dateRange={date} />
                   </div>
                 ) : (
-                  <RoutesList 
+                  <RoutesList
                     routes={getRoutesForTab('all')}
-                    status="all" 
-                    searchQuery={searchQuery} 
-                    dateRange={date} 
+                    status="all"
+                    searchQuery={searchQuery}
+                    dateRange={date}
                     onEditRoute={openEditRouteDialog}
                     onViewDetails={viewTripDetails}
                   />
@@ -505,8 +519,8 @@ const TripManagement = () => {
             <DialogHeader>
               <DialogTitle>{routeToEdit ? 'Edit Route' : 'Create New Route'}</DialogTitle>
             </DialogHeader>
-            <CreateRouteForm 
-              onCancel={() => setShowCreateRouteDialog(false)} 
+            <CreateRouteForm
+              onCancel={() => setShowCreateRouteDialog(false)}
               initialData={routeToEdit}
             />
           </DialogContent>

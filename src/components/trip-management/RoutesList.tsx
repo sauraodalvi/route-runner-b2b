@@ -8,10 +8,10 @@ import {
   TableBody,
   TableCell,
 } from "@/components/ui/table";
-import { Route } from "@/types";
+import { Route, Stop } from "@/types";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, MoreHorizontal, ChevronDown, ChevronUp } from "lucide-react";
+import { MoreHorizontal, ChevronDown, ChevronUp, FileText, FileImage, Download, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -20,6 +20,13 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { StopsAccordion } from "./StopsAccordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface RoutesListProps {
   routes: Route[];
@@ -30,7 +37,7 @@ interface RoutesListProps {
   onViewDetails: (routeId: string) => void;
 }
 
-const RoutesList = ({
+export const RoutesList = ({
   routes = [], // Provide default empty array to prevent undefined errors
   status,
   searchQuery,
@@ -40,10 +47,15 @@ const RoutesList = ({
 }: RoutesListProps) => {
   // Track expanded rows
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  
+  // Track attachments modal
+  const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
+  const [allAttachments, setAllAttachments] = useState<any[]>([]);
+  const [selectedAttachment, setSelectedAttachment] = useState<any>(null);
+
   // Check if routes is undefined or null and default to empty array
   const routesToFilter = routes || [];
-  
+
   const filteredRoutes = routesToFilter.filter((route) => {
     const searchRegex = new RegExp(searchQuery, "i");
     const matchesSearch =
@@ -67,6 +79,31 @@ const RoutesList = ({
     }));
   };
 
+  const openAttachmentsModal = (route: Route, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedRoute(route);
+
+    // Collect all attachments from all stops in the route
+    const attachments: any[] = [];
+    route.stops?.forEach((stop) => {
+      if (stop.attachments) {
+        // For demo purposes, create mock attachments
+        const mockAttachments = [
+          { id: `${stop.id}-1`, name: "Collection Receipt.pdf", type: "pdf", stopName: stop.name },
+          { id: `${stop.id}-2`, name: "Sample Photos.jpg", type: "image", stopName: stop.name },
+          { id: `${stop.id}-3`, name: "Temperature Log.xlsx", type: "xlsx", stopName: stop.name }
+        ];
+        attachments.push(...mockAttachments);
+      }
+    });
+
+    if (attachments.length > 0) {
+      setAllAttachments(attachments);
+      setSelectedAttachment(attachments[0]);
+      setShowAttachmentsModal(true);
+    }
+  };
+
   return (
     <div className="overflow-auto">
       <Table>
@@ -80,8 +117,7 @@ const RoutesList = ({
             <TableHead>Status</TableHead>
             <TableHead>Assigned Team</TableHead>
             <TableHead className="text-center">Stop Count</TableHead>
-            <TableHead className="text-center">Samples Collected</TableHead>
-            <TableHead className="text-center">Unregistered Samples</TableHead>
+            <TableHead className="text-center">Samples</TableHead>
             <TableHead>Attachments</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -90,22 +126,22 @@ const RoutesList = ({
           {filteredRoutes.length > 0 ? (
             filteredRoutes.map((route) => (
               <React.Fragment key={route.id}>
-                <TableRow 
+                <TableRow
                   className="hover:bg-gray-50/50 cursor-pointer"
                   onClick={() => toggleRowExpansion(route.id)}
                 >
                   <TableCell className="px-2">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleRowExpansion(route.id);
                       }}
                     >
-                      {expandedRows[route.id] ? 
-                        <ChevronUp className="h-4 w-4" /> : 
+                      {expandedRows[route.id] ?
+                        <ChevronUp className="h-4 w-4" /> :
                         <ChevronDown className="h-4 w-4" />
                       }
                     </Button>
@@ -119,43 +155,28 @@ const RoutesList = ({
                   </TableCell>
                   <TableCell>{route.assignedTeam}</TableCell>
                   <TableCell className="text-center">{route.stopCount}</TableCell>
-                  <TableCell className="text-center">{route.samplesCollected}</TableCell>
-                  <TableCell className="text-center">{route.unregisteredSamples}</TableCell>
+                  <TableCell className="text-center">
+                    <span className="font-medium">{route.samplesCollected}</span>
+                  </TableCell>
                   <TableCell>
                     {route.attachments ? (
-                      <span className="text-primary">{route.attachments}</span>
+                      <Button
+                        variant="link"
+                        className="p-0 h-auto font-medium text-primary hover:underline"
+                        onClick={(e) => openAttachmentsModal(route, e)}
+                      >
+                        View
+                      </Button>
                     ) : (
                       <span className="text-muted-foreground text-sm">-</span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onViewDetails(route.id);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span className="sr-only">View</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEditRoute(route);
-                        }}
-                      >
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
+                    <div className="flex justify-end">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -175,7 +196,7 @@ const RoutesList = ({
                     </div>
                   </TableCell>
                 </TableRow>
-                
+
                 {expandedRows[route.id] && (
                   <TableRow className="bg-gray-50/30 hover:bg-gray-50/30">
                     <TableCell colSpan={12} className="px-0 py-0">
@@ -202,8 +223,109 @@ const RoutesList = ({
           )}
         </TableBody>
       </Table>
+
+      {/* Attachments Modal with Sidebar */}
+      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal} className="max-w-6xl">
+        <DialogContent className="max-w-6xl w-[90vw] max-h-[80vh] p-0 overflow-hidden">
+          <div className="flex h-[80vh]">
+            {/* Left sidebar with attachment list */}
+            <div className="w-64 border-r bg-gray-50 overflow-y-auto">
+              <div className="p-4 border-b bg-white sticky top-0 z-10">
+                <h3 className="font-medium">Attachments</h3>
+                <p className="text-xs text-muted-foreground mt-1">{allAttachments.length} items</p>
+              </div>
+              <div className="divide-y">
+                {allAttachments.map((attachment, index) => (
+                  <div
+                    key={attachment.id}
+                    className={`p-3 cursor-pointer hover:bg-gray-100 ${selectedAttachment?.id === attachment.id ? 'bg-gray-100' : ''}`}
+                    onClick={() => setSelectedAttachment(attachment)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
+                      {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
+                      {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{attachment.name}</p>
+                        {attachment.stopName && (
+                          <p className="text-xs text-muted-foreground truncate">{attachment.stopName}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <div>
+                  <h2 className="text-lg font-semibold">{selectedAttachment?.name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedAttachment?.type.toUpperCase()} •
+                    {selectedAttachment?.stopName && `From: ${selectedAttachment.stopName}`}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <DialogClose asChild>
+                    <Button variant="ghost" size="sm">Close</Button>
+                  </DialogClose>
+                </div>
+              </div>
+
+              {/* Preview area */}
+              <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
+                {selectedAttachment?.type === "image" ? (
+                  <div className="max-h-full max-w-full overflow-hidden rounded-md shadow-lg">
+                    <img
+                      src={`/images/sample-image.jpg`}
+                      alt={selectedAttachment.name}
+                      className="max-h-[60vh] max-w-full object-contain"
+                    />
+                  </div>
+                ) : selectedAttachment?.type === "pdf" ? (
+                  <div className="bg-white p-8 rounded-md shadow-lg w-full max-w-3xl">
+                    <div className="flex items-center justify-center h-[50vh] border-2 border-dashed border-gray-300 rounded-md">
+                      <div className="text-center">
+                        <FileText className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                        <h3 className="font-medium text-lg mb-2">{selectedAttachment.name}</h3>
+                        <p className="text-muted-foreground mb-4">PDF Preview not available</p>
+                        <Button variant="outline">
+                          <Download className="h-4 w-4 mr-2" />
+                          Download to View
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white p-8 rounded-md shadow-lg w-full max-w-3xl">
+                    <div className="flex items-center justify-center h-[50vh] border-2 border-dashed border-gray-300 rounded-md">
+                      <div className="text-center">
+                        <FileText className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="font-medium text-lg mb-2">{selectedAttachment?.name}</h3>
+                        <p className="text-muted-foreground mb-4">Preview not available for this file type</p>
+                        <Button variant="outline">
+                          <Download className="h-4 w-4 mr-2" />
+                          Download to View
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
-
-export { RoutesList };

@@ -16,12 +16,12 @@ import {
   SidebarMenuSubButton,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { 
-  Home, 
-  Calendar, 
-  FileText, 
-  Truck, 
-  Map, 
+import {
+  Home,
+  Calendar,
+  FileText,
+  Truck,
+  Map,
   Settings,
   Users,
   Search,
@@ -37,7 +37,7 @@ import { Link } from "react-router-dom";
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="flex-shrink-0">
       <SidebarHeader className="flex items-center px-4">
       </SidebarHeader>
       <SidebarTrigger className="absolute right-2 top-4 lg:hidden" />

@@ -17,8 +17,8 @@ interface RouterMapViewProps {
   dateRange?: DateRange;
 }
 
-// Mock data structure for routes with stops
-const mockRoutes = [
+// Mock data structure for trips with stops
+const mockTrips = [
   {
     id: "route1",
     name: "Downtown Medical Collection",
@@ -54,11 +54,11 @@ const mockPickupPartners = [
 ];
 
 export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewProps) {
-  const [routes, setRoutes] = useState<any[]>([]);
+  const [trips, setTrips] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [viewMode, setViewMode] = useState<'routes' | 'partners'>('partners');
+  const [viewMode, setViewMode] = useState<'trips' | 'partners'>('partners');
   const [filterOptions, setFilterOptions] = useState({
     showInSystem: true,
     showNotInSystem: true,
@@ -70,16 +70,22 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
   useEffect(() => {
     setLoading(true);
 
-    // In a real app, this would fetch routes from the API based on filters
+    // In a real app, this would fetch trips from the API based on filters
     setTimeout(() => {
-      const filteredRoutes = mockRoutes.filter(route => {
-        if (status !== "all" && route.status !== status) return false;
-        if (searchQuery && !route.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      const filteredTrips = mockTrips.filter(trip => {
+        if (status !== "all" && trip.status !== status) return false;
+        if (searchQuery && !trip.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         // Additional date range filtering would happen here
+        if (dateRange && dateRange.from && dateRange.to) {
+          const tripDate = new Date(trip.date);
+          const fromDate = new Date(dateRange.from);
+          const toDate = new Date(dateRange.to);
+          if (tripDate < fromDate || tripDate > toDate) return false;
+        }
         return true;
       });
 
-      // Filter partners based on search query
+      // Filter partners based on search query and date range
       const filteredPartners = mockPickupPartners.filter(partner => {
         if (searchQuery &&
             !partner.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -96,7 +102,7 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
         return true;
       });
 
-      setRoutes(filteredRoutes);
+      setTrips(filteredTrips);
       setPartners(filteredPartners);
       setLoading(false);
     }, 800);
@@ -128,13 +134,13 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
     );
   }
 
-  if (viewMode === 'routes' && routes.length === 0) {
+  if (viewMode === 'trips' && trips.length === 0) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-10 text-center">
         <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-medium mb-2">No routes found</h3>
+        <h3 className="text-lg font-medium mb-2">No trips found</h3>
         <p className="text-muted-foreground max-w-md">
-          No routes match your current filters. Try adjusting your search or date range.
+          No trips match your current filters. Try adjusting your search or date range.
         </p>
       </div>
     );
@@ -167,12 +173,12 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
               Partners
             </Button>
             <Button
-              variant={viewMode === 'routes' ? "default" : "outline"}
+              variant={viewMode === 'trips' ? "default" : "outline"}
               className="rounded-none rounded-r-md py-1 h-8 text-xs"
-              onClick={() => setViewMode('routes')}
+              onClick={() => setViewMode('trips')}
             >
               <MapPin className="h-3 w-3 mr-1" />
-              Routes
+              Trips
             </Button>
           </div>
         </div>
@@ -201,13 +207,13 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
               checked={filterOptions.showWithActiveRoutes}
               onCheckedChange={() => toggleFilterOption('showWithActiveRoutes')}
             >
-              With Active Routes
+              With Active Trips
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={filterOptions.showWithNoRoutes}
               onCheckedChange={() => toggleFilterOption('showWithNoRoutes')}
             >
-              With No Routes
+              With No Trips
             </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -217,11 +223,11 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
       <div className="h-full bg-gray-100 flex items-center justify-center">
         <div className="w-full max-w-6xl p-4">
           <div className="bg-white p-4 rounded-lg shadow-md mb-4">
-            <h3 className="text-base font-medium mb-1">{viewMode === 'partners' ? 'Pickup Partners Map' : 'Routes Map'}</h3>
+            <h3 className="text-base font-medium mb-1">{viewMode === 'partners' ? 'Pickup Partners Map' : 'Trips Map'}</h3>
             <p className="text-xs text-muted-foreground mb-2">
               {viewMode === 'partners'
                 ? 'This map shows all your pickup partners. Click on a pin to see details.'
-                : 'This map shows all routes based on your filters. Click on a route to see details.'}
+                : 'This map shows all trips based on your filters. Click on a trip to see details.'}
             </p>
 
             {/* Map placeholder */}
@@ -273,11 +279,11 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
                 );
               })}
 
-              {/* Route pins on the map - Fixed positioning */}
-              {viewMode === 'routes' && routes.flatMap((route, routeIndex) =>
-                route.stops.map((stop: any, stopIndex: number) => {
+              {/* Trip pins on the map - Fixed positioning */}
+              {viewMode === 'trips' && trips.flatMap((trip, tripIndex) =>
+                trip.stops.map((stop: any, stopIndex: number) => {
                   // Calculate position based on indices to ensure they're visible
-                  const totalIndex = routeIndex * 3 + stopIndex;
+                  const totalIndex = tripIndex * 3 + stopIndex;
                   const row = Math.floor(totalIndex / 3);
                   const col = totalIndex % 3;
                   const left = 20 + (col * 30); // 20% + column * 30%
@@ -285,7 +291,7 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
 
                   return (
                     <div
-                      key={`${route.id}-${stop.id}`}
+                      key={`${trip.id}-${stop.id}`}
                       className="absolute"
                       style={{
                         left: `${left}%`,
@@ -296,7 +302,7 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
                       <div
                         className={`h-8 w-8 rounded-full ${stop.type === 'pickup' ? (stop.inSystem ? 'bg-green-500' : 'bg-orange-500') : 'bg-blue-500'}
                           text-white flex items-center justify-center cursor-pointer hover:scale-110 transition-transform`}
-                        title={`${stop.name} (${route.name})`}
+                        title={`${stop.name} (${trip.name})`}
                       >
                         {stop.type === 'pickup' ? <Building className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
                       </div>
@@ -319,7 +325,7 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
                   </div>
                   <span>Not In System</span>
                 </div>
-                {viewMode === 'routes' && (
+                {viewMode === 'trips' && (
                   <div className="flex items-center mb-1">
                     <div className="h-4 w-4 rounded-full bg-blue-500 mr-1 flex items-center justify-center">
                       <MapPin className="h-2 w-2 text-white" />
@@ -332,7 +338,7 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
                     <div className="h-4 w-4 rounded-full bg-green-500 ring-1 ring-blue-500 ring-offset-1 mr-1 flex items-center justify-center">
                       <Building className="h-2 w-2 text-white" />
                     </div>
-                    <span>Active Routes</span>
+                    <span>Active Trips</span>
                   </div>
                 )}
               </div>
@@ -370,30 +376,30 @@ export function RouterMapView({ status, searchQuery, dateRange }: RouterMapViewP
 
                   <div className="flex mt-1 space-x-2">
                     <div className="bg-blue-50 px-1 py-0.5 rounded text-[9px] flex items-center">
-                      <span className="font-medium mr-1">{partner.activeRoutes}</span> Active
+                      <span className="font-medium mr-1">{partner.activeRoutes}</span> Active Trips
                     </div>
                     <div className="bg-gray-50 px-1 py-0.5 rounded text-[9px] flex items-center">
-                      <span className="font-medium mr-1">{partner.upcomingRoutes}</span> Upcoming
+                      <span className="font-medium mr-1">{partner.upcomingRoutes}</span> Upcoming Trips
                     </div>
                   </div>
                 </div>
               ))
             ) : (
-              routes.map(route => (
-                <div key={route.id} className="bg-white p-2 rounded-md shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-xs">
+              trips.map(trip => (
+                <div key={trip.id} className="bg-white p-2 rounded-md shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-xs">
                   <div className="flex items-center space-x-2 mb-1">
                     <div className="h-6 w-6 rounded-full bg-blue-500 text-white flex items-center justify-center">
                       <MapPin className="h-3 w-3" />
                     </div>
                     <div>
-                      <h4 className="font-medium text-xs">{route.name}</h4>
-                      <p className="text-[9px] text-muted-foreground">Date: {route.date}</p>
+                      <h4 className="font-medium text-xs">{trip.name}</h4>
+                      <p className="text-[9px] text-muted-foreground">Date: {trip.date}</p>
                     </div>
                   </div>
 
                   <div className="space-y-1 mt-1">
                     <h5 className="text-[10px] font-medium text-gray-700 mb-1">Pickup Stops</h5>
-                    {route.stops.filter((stop: any) => stop.type === 'pickup').map((stop: any, index: number) => (
+                    {trip.stops.filter((stop: any) => stop.type === 'pickup').map((stop: any, index: number) => (
                       <div key={stop.id} className="flex items-center p-1 bg-muted/40 rounded border border-gray-100">
                         <div className={`h-4 w-4 rounded-full ${stop.inSystem ? 'bg-green-500' : 'bg-orange-500'} text-white flex items-center justify-center text-[9px] mr-1`}>
                           <Building className="h-2 w-2" />

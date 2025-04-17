@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { StopsAccordion } from "./StopsAccordion";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface RoutesListProps {
   routes: Route[];
@@ -78,8 +77,6 @@ const RoutesList = ({
             <TableHead>Route</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Time Start</TableHead>
-            {/* Only show Time End for non-active trips */}
-            {status !== 'active' && <TableHead>Time End</TableHead>}
             <TableHead>Status</TableHead>
             <TableHead>Assigned Team</TableHead>
             <TableHead className="text-center">Stop Count</TableHead>
@@ -93,13 +90,19 @@ const RoutesList = ({
           {filteredRoutes.length > 0 ? (
             filteredRoutes.map((route) => (
               <React.Fragment key={route.id}>
-                <TableRow className="hover:bg-gray-50/50">
+                <TableRow 
+                  className="hover:bg-gray-50/50 cursor-pointer"
+                  onClick={() => toggleRowExpansion(route.id)}
+                >
                   <TableCell className="px-2">
                     <Button 
                       variant="ghost" 
                       size="icon" 
                       className="h-8 w-8"
-                      onClick={() => toggleRowExpansion(route.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRowExpansion(route.id);
+                      }}
                     >
                       {expandedRows[route.id] ? 
                         <ChevronUp className="h-4 w-4" /> : 
@@ -111,7 +114,6 @@ const RoutesList = ({
                   <TableCell>{route.name}</TableCell>
                   <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
                   <TableCell>{route.startTime}</TableCell>
-                  {status !== 'active' && <TableCell>{route.endTime}</TableCell>}
                   <TableCell>
                     <Badge>{route.status}</Badge>
                   </TableCell>
@@ -131,7 +133,10 @@ const RoutesList = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onViewDetails(route.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onViewDetails(route.id);
+                        }}
                       >
                         <Eye className="h-4 w-4" />
                         <span className="sr-only">View</span>
@@ -139,14 +144,21 @@ const RoutesList = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onEditRoute(route)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditRoute(route);
+                        }}
                       >
                         <Edit className="h-4 w-4" />
                         <span className="sr-only">Edit</span>
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <MoreHorizontal className="h-4 w-4" />
                             <span className="sr-only">More</span>
                           </Button>
@@ -166,7 +178,7 @@ const RoutesList = ({
                 
                 {expandedRows[route.id] && (
                   <TableRow className="bg-gray-50/30 hover:bg-gray-50/30">
-                    <TableCell colSpan={status === 'active' ? 12 : 13} className="px-0 py-0">
+                    <TableCell colSpan={12} className="px-0 py-0">
                       <div className="p-4">
                         {route.stops && route.stops.length > 0 ? (
                           <StopsAccordion stops={route.stops} />
@@ -183,7 +195,7 @@ const RoutesList = ({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={status === 'active' ? 12 : 13} className="text-center py-6 text-muted-foreground">
+              <TableCell colSpan={12} className="text-center py-6 text-muted-foreground">
                 No routes found. Try adjusting your search criteria.
               </TableCell>
             </TableRow>

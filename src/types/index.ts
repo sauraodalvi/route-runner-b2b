@@ -32,6 +32,7 @@ export interface Stop {
   organization?: string;
   inSystem?: boolean;
   notes?: string;
+  attachments?: string;
 }
 
 // Add other type definitions as needed

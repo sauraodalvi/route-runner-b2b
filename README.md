@@ -12,7 +12,7 @@ A logistics management application for B2B sample collection and delivery.
 
 ## Live Demo
 
-Visit the live demo at: [https://YOUR_USERNAME.github.io/route-runner-b2b/](https://YOUR_USERNAME.github.io/route-runner-b2b/)
+Visit the live demo at: [https://sauraodalvi.github.io/route-runner-b2b/](https://sauraodalvi.github.io/route-runner-b2b/)
 
 ## How can I edit this code?
 

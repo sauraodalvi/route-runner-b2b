@@ -35,6 +35,7 @@ interface RoutesListProps {
   dateRange: { from?: Date; to?: Date } | undefined;
   onEditRoute: (route: any) => void;
   onViewDetails: (routeId: string) => void;
+  onCopyRoute?: (route: any) => void;
 }
 
 export const RoutesList = ({
@@ -44,9 +45,9 @@ export const RoutesList = ({
   dateRange,
   onEditRoute,
   onViewDetails,
+  onCopyRoute,
 }: RoutesListProps) => {
-  // Track expanded rows
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  // No longer tracking expanded rows as we're removing the accordion
   // Track attachments modal
   const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
@@ -72,11 +73,25 @@ export const RoutesList = ({
     return matchesSearch && matchesDateRange;
   });
 
-  const toggleRowExpansion = (routeId: string) => {
-    setExpandedRows(prev => ({
-      ...prev,
-      [routeId]: !prev[routeId]
-    }));
+  // Group routes by date
+  const routesByDate: Record<string, Route[]> = {};
+
+  filteredRoutes.forEach(route => {
+    const dateStr = format(new Date(route.date), 'yyyy-MM-dd');
+    if (!routesByDate[dateStr]) {
+      routesByDate[dateStr] = [];
+    }
+    routesByDate[dateStr].push(route);
+  });
+
+  // Sort dates in descending order (newest first)
+  const sortedDates = Object.keys(routesByDate).sort((a, b) => {
+    return new Date(b).getTime() - new Date(a).getTime();
+  });
+
+  // View details directly instead of expanding rows
+  const viewDetails = (routeId: string) => {
+    onViewDetails(routeId);
   };
 
   const openAttachmentsModal = (route: Route, e: React.MouseEvent) => {
@@ -109,10 +124,8 @@ export const RoutesList = ({
       <Table>
         <TableHeader className="bg-gray-50">
           <TableRow>
-            <TableHead className="w-10"></TableHead>
             <TableHead>Trip ID</TableHead>
             <TableHead>Route</TableHead>
-            <TableHead>Date</TableHead>
             <TableHead>Time Start</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Assigned Team</TableHead>
@@ -123,95 +136,89 @@ export const RoutesList = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredRoutes.length > 0 ? (
-            filteredRoutes.map((route) => (
-              <React.Fragment key={route.id}>
-                <TableRow
-                  className="hover:bg-gray-50/50 cursor-pointer"
-                  onClick={() => toggleRowExpansion(route.id)}
-                >
-                  <TableCell className="px-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRowExpansion(route.id);
-                      }}
-                    >
-                      {expandedRows[route.id] ?
-                        <ChevronUp className="h-4 w-4" /> :
-                        <ChevronDown className="h-4 w-4" />
-                      }
-                    </Button>
-                  </TableCell>
-                  <TableCell className="font-medium">{route.tripId}</TableCell>
-                  <TableCell>{route.name}</TableCell>
-                  <TableCell>{format(new Date(route.date), 'MMM dd, yyyy')}</TableCell>
-                  <TableCell>{route.startTime}</TableCell>
-                  <TableCell>
-                    <Badge>{route.status}</Badge>
-                  </TableCell>
-                  <TableCell>{route.assignedTeam}</TableCell>
-                  <TableCell className="text-center">{route.stopCount}</TableCell>
-                  <TableCell className="text-center">
-                    <span className="font-medium">{route.samplesCollected}</span>
-                  </TableCell>
-                  <TableCell>
-                    {route.attachments ? (
-                      <Button
-                        variant="link"
-                        className="p-0 h-auto font-medium text-primary hover:underline"
-                        onClick={(e) => openAttachmentsModal(route, e)}
-                      >
-                        View
-                      </Button>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">More</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => onViewDetails(route.id)}>
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onEditRoute(route)}>
-                            Edit Route
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+          {sortedDates.length > 0 ? (
+            sortedDates.map((dateStr) => (
+              <React.Fragment key={dateStr}>
+                {/* Date Header Row */}
+                <TableRow className="bg-gray-50/50">
+                  <TableCell colSpan={9} className="py-2">
+                    <div className="font-medium text-gray-700">
+                      {format(new Date(dateStr), 'MMM d, yyyy')}
                     </div>
                   </TableCell>
                 </TableRow>
 
-                {expandedRows[route.id] && (
-                  <TableRow className="bg-gray-50/30 hover:bg-gray-50/30">
-                    <TableCell colSpan={12} className="px-0 py-0">
-                      <div className="p-4">
-                        {route.stops && route.stops.length > 0 ? (
-                          <StopsAccordion stops={route.stops} />
-                        ) : (
-                          <div className="text-center p-2 text-muted-foreground text-sm">
-                            No stop information available
-                          </div>
-                        )}
+                {/* Routes for this date */}
+                {routesByDate[dateStr].map((route) => (
+                  <TableRow
+                    key={route.id}
+                    className="hover:bg-gray-50/50 cursor-pointer"
+                    onClick={() => viewDetails(route.id)}
+                  >
+                    <TableCell className="font-medium">{route.tripId}</TableCell>
+                    <TableCell>{route.name}</TableCell>
+                    <TableCell>{route.startTime}</TableCell>
+                    <TableCell>
+                      <Badge>{route.status}</Badge>
+                    </TableCell>
+                    <TableCell>{route.assignedTeam}</TableCell>
+                    <TableCell className="text-center">{route.stopCount}</TableCell>
+                    <TableCell className="text-center">
+                      <span className="font-medium">{route.samplesCollected}</span>
+                    </TableCell>
+                    <TableCell>
+                      {route.attachments ? (
+                        <Button
+                          variant="link"
+                          className="p-0 h-auto font-medium text-primary hover:underline"
+                          onClick={(e) => openAttachmentsModal(route, e)}
+                        >
+                          View
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">More</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              onViewDetails(route.id);
+                            }}>
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              onEditRoute(route);
+                            }}>
+                              Edit Route
+                            </DropdownMenuItem>
+                            {onCopyRoute && (
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                onCopyRoute(route);
+                              }}>
+                                Copy Route
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </TableCell>
                   </TableRow>
-                )}
+                ))}
               </React.Fragment>
             ))
           ) : (

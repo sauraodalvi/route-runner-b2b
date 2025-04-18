@@ -1,7 +1,38 @@
 import { Route, Stop } from "@/types";
 
-// Sample stops data
-const sampleStops: Stop[] = [
+// Sample cancelled stops (only checkpoints can be cancelled)
+const cancelledCheckpoints: Stop[] = [
+  {
+    id: 101,
+    name: "Checkpoint Alpha",
+    address: "789 Cross St, New York, NY 10003",
+    type: "checkpoint",
+    time: "10:45 AM",
+    status: "cancelled",
+    notes: "Checkpoint cancelled due to route optimization.",
+  },
+  {
+    id: 102,
+    name: "Checkpoint Beta",
+    address: "303 Midtown Blvd, New York, NY 10006",
+    type: "checkpoint",
+    time: "12:45 PM",
+    status: "cancelled",
+    notes: "Checkpoint cancelled due to weather conditions.",
+  },
+  {
+    id: 103,
+    name: "Checkpoint Gamma",
+    address: "505 East Side Ave, New York, NY 10008",
+    type: "checkpoint",
+    time: "02:15 PM",
+    status: "cancelled",
+    notes: "Checkpoint cancelled due to traffic congestion.",
+  }
+];
+
+// Sample stops data for active routes
+const activeStops: Stop[] = [
   {
     id: 1,
     name: "Central Hospital",
@@ -85,6 +116,128 @@ const sampleStops: Stop[] = [
   }
 ];
 
+// Sample stops for upcoming routes (no samples collected yet)
+const upcomingStops: Stop[] = [
+  {
+    id: 1,
+    name: "Central Hospital",
+    address: "123 Main St, New York, NY 10001",
+    type: "pickup",
+    time: "08:15 AM",
+    status: "pending",
+    samplesCollected: 0,
+    samplesRegistered: 0,
+    samplesUnregistered: 0,
+    contactName: "Dr. Johnson",
+    contactPhone: "555-123-4567",
+    organization: "NYC Health",
+    inSystem: true,
+    notes: "Samples must be kept at 2-8°C during transport. Access through the loading dock at the rear of the building."
+  },
+  {
+    id: 2,
+    name: "City Medical Center",
+    address: "456 Park Ave, New York, NY 10002",
+    type: "pickup",
+    time: "09:30 AM",
+    status: "pending",
+    samplesCollected: 0,
+    samplesRegistered: 0,
+    samplesUnregistered: 0,
+    contactName: "Nurse Williams",
+    contactPhone: "555-987-6543",
+    organization: "City Health Network",
+    inSystem: true
+  },
+  {
+    id: 3,
+    name: "Checkpoint Alpha",
+    address: "789 Cross St, New York, NY 10003",
+    type: "checkpoint",
+    time: "10:45 AM",
+    status: "pending",
+    notes: "Temperature check point. Verify all samples are within acceptable temperature range."
+  },
+  {
+    id: 4,
+    name: "Downtown Clinic",
+    address: "101 First Ave, New York, NY 10004",
+    type: "pickup",
+    time: "11:30 AM",
+    status: "pending",
+    samplesCollected: 0,
+    samplesRegistered: 0,
+    samplesUnregistered: 0,
+    contactName: "Dr. Roberts",
+    contactPhone: "555-234-5678",
+    organization: "Downtown Health",
+    inSystem: true
+  }
+];
+
+// Sample stops for completed routes
+const completedStops: Stop[] = [
+  {
+    id: 1,
+    name: "Central Hospital",
+    address: "123 Main St, New York, NY 10001",
+    type: "pickup",
+    time: "08:15 AM",
+    status: "completed",
+    samplesCollected: 5,
+    samplesRegistered: 4,
+    samplesUnregistered: 1,
+    contactName: "Dr. Johnson",
+    contactPhone: "555-123-4567",
+    organization: "NYC Health",
+    inSystem: true,
+    notes: "Samples must be kept at 2-8°C during transport. Access through the loading dock at the rear of the building.",
+    attachments: "2 files"
+  },
+  {
+    id: 2,
+    name: "City Medical Center",
+    address: "456 Park Ave, New York, NY 10002",
+    type: "pickup",
+    time: "09:30 AM",
+    status: "completed",
+    samplesCollected: 7,
+    samplesRegistered: 7,
+    samplesUnregistered: 0,
+    contactName: "Nurse Williams",
+    contactPhone: "555-987-6543",
+    organization: "City Health Network",
+    inSystem: true,
+    attachments: "1 file"
+  },
+  {
+    id: 3,
+    name: "Checkpoint Alpha",
+    address: "789 Cross St, New York, NY 10003",
+    type: "checkpoint",
+    time: "10:45 AM",
+    status: "completed",
+    notes: "Temperature check point. Verify all samples are within acceptable temperature range.",
+    attachments: "1 file"
+  },
+  {
+    id: 4,
+    name: "Downtown Clinic",
+    address: "101 First Ave, New York, NY 10004",
+    type: "pickup",
+    time: "11:30 AM",
+    status: "completed",
+    samplesCollected: 4,
+    samplesRegistered: 1,
+    samplesUnregistered: 3,
+    contactName: "Dr. Roberts",
+    contactPhone: "555-234-5678",
+    organization: "Downtown Health",
+    inSystem: true,
+    attachments: "2 files"
+  }
+];
+
 // Sample routes data
 export const sampleRoutes: Route[] = [
   {
@@ -96,11 +249,48 @@ export const sampleRoutes: Route[] = [
     endTime: "01:30 PM",
     status: "active",
     assignedTeam: "Team Alpha",
-    stopCount: 6,
-    samplesCollected: 19,
-    unregisteredSamples: 6,
-    attachments: "2 files",
-    stops: sampleStops
+    stopCount: 7,
+    samplesCollected: 8,
+    unregisteredSamples: 3,
+    attachments: "1 file",
+    stops: [
+      // First 2 stops completed
+      {
+        ...activeStops[0],
+        status: "completed",
+        samplesCollected: 5,
+        samplesRegistered: 3,
+        samplesUnregistered: 2,
+        attachments: "1 file"
+      },
+      {
+        ...activeStops[1],
+        status: "completed",
+        samplesCollected: 3,
+        samplesRegistered: 2,
+        samplesUnregistered: 1
+      },
+      // Current stop in progress
+      {
+        ...activeStops[2],
+        status: "in-progress"
+      },
+      // Remaining stops pending
+      {
+        ...activeStops[3],
+        status: "pending"
+      },
+      {
+        ...activeStops[4],
+        status: "pending"
+      },
+      {
+        ...activeStops[5],
+        status: "pending"
+      },
+      // Cancelled checkpoint
+      cancelledCheckpoints[0]
+    ]
   },
   {
     id: "1002",
@@ -111,11 +301,11 @@ export const sampleRoutes: Route[] = [
     endTime: "02:45 PM",
     status: "upcoming",
     assignedTeam: "Team Beta",
-    stopCount: 8,
-    samplesCollected: 24,
-    unregisteredSamples: 2,
-    attachments: "1 file",
-    stops: sampleStops.slice(0, 4)
+    stopCount: 5,
+    samplesCollected: 0,
+    unregisteredSamples: 0,
+    attachments: "",
+    stops: [...upcomingStops.slice(0, 4), cancelledCheckpoints[0]]
   },
   {
     id: "1003",
@@ -130,7 +320,7 @@ export const sampleRoutes: Route[] = [
     samplesCollected: 35,
     unregisteredSamples: 0,
     attachments: "4 files",
-    stops: sampleStops.slice(1, 5)
+    stops: completedStops.slice(0, 4)
   },
   {
     id: "1004",
@@ -141,11 +331,11 @@ export const sampleRoutes: Route[] = [
     endTime: "01:00 PM",
     status: "upcoming",
     assignedTeam: "Team Delta",
-    stopCount: 5,
-    samplesCollected: 15,
-    unregisteredSamples: 3,
-    attachments: "1 file",
-    stops: sampleStops.slice(2, 6)
+    stopCount: 4,
+    samplesCollected: 0,
+    unregisteredSamples: 0,
+    attachments: "",
+    stops: [...upcomingStops.slice(1, 4), cancelledCheckpoints[1]]
   },
   {
     id: "1005",
@@ -160,7 +350,7 @@ export const sampleRoutes: Route[] = [
     samplesCollected: 22,
     unregisteredSamples: 1,
     attachments: "3 files",
-    stops: sampleStops.slice(0, 5)
+    stops: completedStops
   },
   {
     id: "1006",
@@ -172,10 +362,10 @@ export const sampleRoutes: Route[] = [
     status: "upcoming",
     assignedTeam: "Team Beta",
     stopCount: 4,
-    samplesCollected: 12,
+    samplesCollected: 0,
     unregisteredSamples: 0,
     attachments: "",
-    stops: sampleStops.slice(1, 4)
+    stops: [...upcomingStops.slice(0, 3), cancelledCheckpoints[2]]
   },
   {
     id: "1007",
@@ -186,11 +376,53 @@ export const sampleRoutes: Route[] = [
     endTime: "01:45 PM",
     status: "active",
     assignedTeam: "Team Gamma",
-    stopCount: 6,
-    samplesCollected: 18,
+    stopCount: 8,
+    samplesCollected: 10,
     unregisteredSamples: 4,
     attachments: "2 files",
-    stops: sampleStops.slice(0, 6)
+    stops: [
+      // First 3 stops completed
+      {
+        ...activeStops[0],
+        status: "completed",
+        samplesCollected: 5,
+        samplesRegistered: 4,
+        samplesUnregistered: 1,
+        attachments: "1 file"
+      },
+      {
+        ...activeStops[1],
+        status: "completed",
+        samplesCollected: 3,
+        samplesRegistered: 1,
+        samplesUnregistered: 2,
+        attachments: "1 file"
+      },
+      {
+        ...activeStops[2],
+        status: "completed"
+      },
+      // Current stop in progress
+      {
+        ...activeStops[3],
+        status: "in-progress",
+        samplesCollected: 2,
+        samplesRegistered: 1,
+        samplesUnregistered: 1
+      },
+      // Remaining stops pending
+      {
+        ...activeStops[4],
+        status: "pending"
+      },
+      {
+        ...activeStops[5],
+        status: "pending"
+      },
+      // Cancelled checkpoints
+      cancelledCheckpoints[1],
+      cancelledCheckpoints[2]
+    ]
   },
   {
     id: "1008",
@@ -205,7 +437,7 @@ export const sampleRoutes: Route[] = [
     samplesCollected: 27,
     unregisteredSamples: 2,
     attachments: "5 files",
-    stops: sampleStops.slice(1, 6)
+    stops: completedStops
   },
   {
     id: "1009",
@@ -216,11 +448,11 @@ export const sampleRoutes: Route[] = [
     endTime: "02:00 PM",
     status: "upcoming",
     assignedTeam: "Team Alpha",
-    stopCount: 7,
-    samplesCollected: 21,
-    unregisteredSamples: 1,
-    attachments: "1 file",
-    stops: sampleStops.slice(0, 4)
+    stopCount: 6,
+    samplesCollected: 0,
+    unregisteredSamples: 0,
+    attachments: "",
+    stops: [...upcomingStops, cancelledCheckpoints[0], cancelledCheckpoints[1]]
   },
   {
     id: "1010",
@@ -235,6 +467,6 @@ export const sampleRoutes: Route[] = [
     samplesCollected: 15,
     unregisteredSamples: 0,
     attachments: "2 files",
-    stops: sampleStops.slice(2, 5)
+    stops: completedStops.slice(0, 3)
   }
 ];

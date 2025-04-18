@@ -36,7 +36,7 @@ export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
                   <div className="font-medium text-sm flex items-center">
                     {stop.name}
                     {stop.type === "pickup" && stop.organization && (
-                      <Badge 
+                      <Badge
                         className={`ml-2 ${stop.inSystem ? "bg-green-500" : "bg-orange-500"}`}
                         variant="secondary"
                       >
@@ -65,11 +65,11 @@ export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
               </div>
               <div className="flex flex-col items-end">
                 <Badge variant={stop.type === "checkpoint" ? "secondary" : "default"} className="mb-1">
-                  {stop.type === "checkpoint" ? 
-                    <Check className="h-3 w-3 mr-1" /> : 
+                  {stop.type === "checkpoint" ?
+                    <Check className="h-3 w-3 mr-1" /> :
                     <Building className="h-3 w-3 mr-1" />
                   }
-                  {stop.type === "checkpoint" ? "Checkpoint" : "Pickup"}
+                  {stop.type === "checkpoint" ? "Drop-off Point" : "Pickup"}
                 </Badge>
                 {stop.time && (
                   <div className="text-xs text-muted-foreground flex items-center justify-end">
@@ -85,20 +85,20 @@ export function StopsList({ stops, onDeleteStop, onEditStop }: StopsListProps) {
                 {(onDeleteStop || onEditStop) && (
                   <div className="mt-2 flex space-x-1">
                     {onEditStop && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 w-6 p-0" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
                         onClick={() => onEditStop(stop)}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
                     )}
                     {onDeleteStop && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => onDeleteStop(stop.id)}
                       >
                         <Trash2 className="h-3 w-3" />

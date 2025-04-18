@@ -123,7 +123,7 @@ export const StopsAccordion = ({ stops = [] }: StopsAccordionProps) => {
                 <TableCell>
                   {stop.type === "checkpoint" ? (
                     <Badge variant="secondary" className="flex items-center">
-                      <Building className="h-3 w-3 mr-1" /> Checkpoint
+                      <Building className="h-3 w-3 mr-1" /> Drop-off Point
                     </Badge>
                   ) : (
                     <Badge className="flex items-center">

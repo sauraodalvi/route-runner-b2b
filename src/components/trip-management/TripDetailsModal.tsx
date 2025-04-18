@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogFooter 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter
 } from "@/components/ui/dialog";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
-  Accordion, 
-  AccordionContent, 
-  AccordionItem, 
-  AccordionTrigger 
-} from "@/components/ui/accordion";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -30,7 +28,7 @@ import {
 } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -38,28 +36,29 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle 
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog";
-import { 
-  Tooltip, 
-  TooltipContent, 
-  TooltipProvider, 
-  TooltipTrigger 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
 } from "@/components/ui/tooltip";
-import { 
-  MapPin, 
-  Clock, 
-  Truck, 
-  User, 
-  Phone, 
-  FileText, 
-  FileImage, 
-  Eye, 
-  Download, 
-  CheckCircle, 
-  XCircle, 
-  Edit, 
-  AlertTriangle, 
+import {
+  MapPin,
+  Clock,
+  Truck,
+  User,
+  Phone,
+  FileText,
+  FileImage,
+  Eye,
+  Download,
+  CheckCircle,
+  XCircle,
+  Edit,
+  AlertTriangle,
+  AlertCircle,
   Building,
   Calendar as CalendarIcon,
   Info
@@ -79,6 +78,23 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
   const [showSampleDetails, setShowSampleDetails] = useState(false);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const [showAttachment, setShowAttachment] = useState<string | null>(null);
+  const [assignedTeam, setAssignedTeam] = useState("");
+
+  // Available teams for dropdown
+  const availableTeams = [
+    "Team Alpha",
+    "Team Beta",
+    "Team Gamma",
+    "Team Delta",
+    "FastTrack Logistics",
+    "MedExpress Team",
+    "QuickSample Collectors"
+  ];
+  const [isEditingAssignedTeam, setIsEditingAssignedTeam] = useState(false);
+  const [selectedStop, setSelectedStop] = useState<any>(null);
+  const [showSamplesModal, setShowSamplesModal] = useState(false);
+  const [showUnregisteredSamplesModal, setShowUnregisteredSamplesModal] = useState(false);
+  const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
 
   useEffect(() => {
     if (open && tripId) {
@@ -104,63 +120,116 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
           createdBy: "Admin User",
           notes: "All samples collected successfully. Minor delay due to traffic.",
           stopsList: [
-            { 
-              id: 1, 
-              name: "Central Hospital", 
+            {
+              id: 1,
+              name: "Central Hospital",
               address: "123 Main St, Suite 400, New York, NY 10001",
               samplesCollected: 8,
               samplesRegistered: 8,
               samplesUnregistered: 0,
-              status: "on-time", // "on-time", "delayed", "critical"
-              notes: "All samples collected on time",
+              status: "completed", // "completed", "in-progress", "pending", "cancelled"
+              notes: "All samples collected successfully.",
               contactName: "Dr. Sarah Johnson",
               contactPhone: "+1 555-987-6543",
               samples: [
-                { id: "S101", type: "Blood", collectedBy: "Dr. Sarah", time: "09:00 AM" },
-                { id: "S102", type: "Urine", collectedBy: "Nurse Mike", time: "09:15 AM" },
-                { id: "S103", type: "Tissue", collectedBy: "Dr. Sarah", time: "09:30 AM" }
+                { id: "S101", type: "Blood", collectedBy: "Dr. Sarah", time: "09:00 AM", accessionNumber: "ACC-2024-001" },
+                { id: "S102", type: "Urine", collectedBy: "Nurse Mike", time: "09:15 AM", accessionNumber: "ACC-2024-002" },
+                { id: "S103", type: "Tissue", collectedBy: "Dr. Sarah", time: "09:30 AM", accessionNumber: "ACC-2024-003" },
+                { id: "S104", type: "Blood", collectedBy: "Dr. Sarah", time: "09:45 AM", accessionNumber: "ACC-2024-004" },
+                { id: "S105", type: "Serum", collectedBy: "Nurse Mike", time: "10:00 AM", accessionNumber: "ACC-2024-005" },
+                { id: "S106", type: "Plasma", collectedBy: "Dr. Sarah", time: "10:15 AM", accessionNumber: "ACC-2024-006" },
+                { id: "S107", type: "CSF", collectedBy: "Dr. Sarah", time: "10:30 AM", accessionNumber: "ACC-2024-007" },
+                { id: "S108", type: "Tissue", collectedBy: "Nurse Mike", time: "10:45 AM", accessionNumber: "ACC-2024-008" }
+              ],
+              unregisteredSamples: [
+                { type: "Blood", quantity: 2 },
+                { type: "Tissue", quantity: 1 }
               ],
               attachments: [
                 { id: 101, name: "Collection Receipt", type: "pdf" },
                 { id: 102, name: "Temperature Log", type: "xlsx" }
               ]
             },
-            { 
-              id: 2, 
-              name: "City Lab", 
+            {
+              id: 2,
+              name: "City Lab",
               address: "456 Park Ave, New York, NY 10002",
               samplesCollected: 15,
               samplesRegistered: 12,
               samplesUnregistered: 3,
-              status: "delayed", // "on-time", "delayed", "critical"
-              notes: "Delayed collection due to lab processing",
+              status: "in-progress", // "completed", "in-progress", "pending", "cancelled"
+              notes: "Collection in progress. Some samples already secured.",
               contactName: "Lab Manager Mike",
               contactPhone: "+1 555-456-7890",
               samples: [
-                { id: "S201", type: "Blood", collectedBy: "Lab Tech Jim", time: "11:00 AM" },
-                { id: "S202", type: "Serum", collectedBy: "Lab Tech Anna", time: "11:15 AM" },
-                { id: "S203", type: "Plasma", collectedBy: "Lab Tech Jim", time: "11:30 AM" },
-                { id: "S204", type: "CSF", collectedBy: "Dr. Roberts", time: "11:45 AM" }
+                { id: "S201", type: "Blood", collectedBy: "Lab Tech Jim", time: "11:00 AM", accessionNumber: "ACC-2024-004" },
+                { id: "S202", type: "Serum", collectedBy: "Lab Tech Anna", time: "11:15 AM", accessionNumber: "ACC-2024-005" },
+                { id: "S203", type: "Plasma", collectedBy: "Lab Tech Jim", time: "11:30 AM", accessionNumber: "ACC-2024-006" },
+                { id: "S204", type: "CSF", collectedBy: "Dr. Roberts", time: "11:45 AM", accessionNumber: "ACC-2024-007" }
+              ],
+              unregisteredSamples: [
+                { type: "Blood", quantity: 1 },
+                { type: "Urine", quantity: 2 }
               ],
               attachments: [
                 { id: 201, name: "Lab Manifest", type: "pdf" },
                 { id: 202, name: "Sample Photos", type: "image" }
               ]
             },
-            { 
-              id: 3, 
-              name: "Checkout Point", 
-              address: "789 Delivery St, New York, NY 10003",
-              type: "checkout",
-              status: "on-time", // "on-time", "delayed", "critical"
-              notes: "Final delivery checkpoint",
-              contactName: "Logistics Manager",
+            {
+              id: 3,
+              name: "Checkpoint Alpha",
+              address: "789 Cross St, New York, NY 10003",
+              type: "checkpoint",
+              status: "cancelled", // "completed", "in-progress", "pending", "cancelled"
+              notes: "Checkpoint cancelled due to route optimization.",
+              contactName: "Quality Control",
               contactPhone: "+1 555-789-1234"
-              // No samples or attachments for checkout points
+              // No samples or attachments for cancelled stops
+            },
+            {
+              id: 4,
+              name: "Eastside Clinic",
+              address: "321 Medical Blvd, New York, NY 10004",
+              type: "pickup",
+              status: "pending", // "completed", "in-progress", "pending", "cancelled"
+              samplesCollected: 0,
+              samplesRegistered: 0,
+              samplesUnregistered: 0,
+              notes: "Scheduled for late afternoon pickup.",
+              contactName: "Dr. Williams",
+              contactPhone: "+1 555-987-6543"
+              // No samples or attachments for pending stops
+            },
+            {
+              id: 5,
+              name: "North Hospital",
+              address: "555 Healthcare Dr, New York, NY 10005",
+              type: "pickup",
+              status: "pending", // "completed", "in-progress", "pending", "cancelled"
+              samplesCollected: 0,
+              samplesRegistered: 0,
+              samplesUnregistered: 0,
+              notes: "Scheduled for afternoon pickup.",
+              contactName: "Lab Manager",
+              contactPhone: "+1 555-222-3333"
+              // No samples or attachments for pending stops
+            },
+            {
+              id: 6,
+              name: "Checkpoint Beta",
+              address: "888 Quality Blvd, New York, NY 10006",
+              type: "checkpoint",
+              status: "cancelled", // "completed", "in-progress", "pending", "cancelled"
+              notes: "Checkpoint cancelled due to weather conditions.",
+              contactName: "Safety Officer",
+              contactPhone: "+1 555-444-5555"
+              // No samples or attachments for cancelled stops
             }
           ]
         };
         setTripData(mockTripData);
+        setAssignedTeam(mockTripData.assignedTeam);
         setLoading(false);
       }, 1000);
     }
@@ -168,53 +237,130 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
 
   const handleCancelTrip = () => {
     if (!tripData) return;
-    
+
     // In a real app, this would call an API to cancel the trip
     toast({
       title: "Trip Cancelled",
       description: `Trip ${tripData.routeNo} has been cancelled.`,
     });
-    
+
     // Update trip status locally
     setTripData({
       ...tripData,
       status: 'cancelled'
     });
-    
+
     setShowCancelDialog(false);
   };
 
-  const handleConfirmCollection = () => {
-    if (!tripData) return;
-    
-    // In a real app, this would call an API to confirm collection
-    toast({
-      title: "Collection Confirmed",
-      description: `Trip ${tripData.routeNo} has been marked as completed.`,
-    });
-    
-    // Update trip status locally
-    setTripData({
-      ...tripData,
-      status: 'completed'
-    });
-  };
+  // Removed handleConfirmCollection function as it's no longer needed
 
   const handleDownloadSummary = () => {
     if (!tripData) return;
-    
-    // In a real app, this would generate and download a trip summary
+
     toast({
       title: "Generating Summary",
       description: "Your trip summary is being generated...",
     });
-    
-    setTimeout(() => {
-      toast({
-        title: "Download Ready",
-        description: "Your trip summary has been downloaded.",
+
+    // Create CSV content
+    const headers = [
+      "Route Name",
+      "Route ID",
+      "Trip Name",
+      "Trip ID",
+      "Stop Name",
+      "Contact Person",
+      "Contact Number",
+      "Registered Samples with Accession Numbers",
+      "Unregistered Samples",
+      "Sample Types",
+      "Number of Attachments",
+      "Pickup Partner"
+    ];
+
+    let csvContent = headers.join(",") + "\n";
+
+    // Generate dummy data rows
+    if (tripData.stopsList && tripData.stopsList.length > 0) {
+      tripData.stopsList.forEach((stop: any) => {
+        // For each stop, create a row
+        const registeredSamples = stop.samples ?
+          stop.samples.map((s: any) => `${s.id}:${s.accessionNumber || 'N/A'}`).join('; ') :
+          'None';
+
+        const unregisteredSamples = stop.unregisteredSamples ?
+          stop.unregisteredSamples.map((s: any) => `${s.type}:${s.quantity}`).join('; ') :
+          'None';
+
+        const sampleTypes = stop.samples ?
+          [...new Set(stop.samples.map((s: any) => s.type))].join('; ') :
+          'None';
+
+        const row = [
+          tripData.routeName,
+          tripData.routeNo,
+          tripData.routeName, // Using route name as trip name for demo
+          tripData.id,
+          stop.name,
+          stop.contactName || 'N/A',
+          stop.contactPhone || 'N/A',
+          registeredSamples,
+          unregisteredSamples,
+          sampleTypes,
+          stop.attachments ? stop.attachments.length : 0,
+          tripData.partnerName || 'N/A'
+        ];
+
+        // Escape any commas in the data
+        const escapedRow = row.map(field => {
+          // If field contains comma, quote, or newline, wrap it in quotes
+          if (typeof field === 'string' && (field.includes(',') || field.includes('"') || field.includes('\n'))) {
+            return `"${field.replace(/"/g, '""')}"`; // Escape quotes by doubling them
+          }
+          return field;
+        });
+
+        csvContent += escapedRow.join(",") + "\n";
       });
-    }, 1500);
+    } else {
+      // Add a dummy row if no stops
+      const dummyRow = [
+        tripData.routeName,
+        tripData.routeNo,
+        tripData.routeName,
+        tripData.id,
+        'No stops available',
+        'N/A',
+        'N/A',
+        'None',
+        'None',
+        'None',
+        '0',
+        tripData.partnerName || 'N/A'
+      ];
+      csvContent += dummyRow.join(",") + "\n";
+    }
+
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Create a download link and trigger the download
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `trip_summary_${tripData.routeNo}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Download Complete",
+      description: "Your trip summary has been downloaded as a CSV file that can be opened in Excel.",
+    });
   };
 
   const handleEditTrip = () => {
@@ -237,8 +383,14 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
     }, 1500);
   };
 
+  // This function is now used to select an attachment in the sidebar
   const handleViewAttachment = (attachment: any) => {
-    setShowAttachment(attachment.type === "image" ? attachment.name : null);
+    // In a real app, this would update the selected attachment
+    // For now, we'll just show a toast notification
+    toast({
+      title: "Attachment Selected",
+      description: `Viewing ${attachment.name}`,
+    });
   };
 
   const handleOpenSampleDetails = (sampleId: string) => {
@@ -249,6 +401,23 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
   const handleCloseSampleDetails = () => {
     setSelectedSample(null);
     setShowSampleDetails(false);
+  };
+
+  const handleSaveAssignedTeam = () => {
+    if (tripData) {
+      // In a real app, this would call an API to update the assigned team
+      setTripData({
+        ...tripData,
+        assignedTeam: assignedTeam
+      });
+
+      toast({
+        title: "Team Updated",
+        description: `Trip has been reassigned to ${assignedTeam}.`,
+      });
+
+      setIsEditingAssignedTeam(false);
+    }
   };
 
   const isTripCancellable = () => {
@@ -297,7 +466,7 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
   const renderSamples = (samples: any[]) => {
     const registeredSamples = samples.filter(s => s.id);
     const unregisteredSamples = samples.filter(s => !s.id);
-    
+
     return (
       <div className="space-y-4">
         {registeredSamples.length > 0 && (
@@ -380,7 +549,7 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto px-2 sm:px-6 py-4">
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto px-2 sm:px-6 py-4 overflow-x-hidden">
           <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-2 border-b">
             <div className="flex flex-col space-y-1.5">
               <div className="flex items-center">
@@ -390,7 +559,7 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
               <div className="flex items-center text-sm text-muted-foreground">
                 <CalendarIcon className="h-3.5 w-3.5 mr-1" />
                 {tripData.date}
-                
+
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -410,304 +579,266 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
               </div>
             </div>
           </DialogHeader>
-                  
-          <Tabs defaultValue="info" className="pt-2">
-            <TabsList className="w-full">
-              <TabsTrigger value="info">Trip Info</TabsTrigger>
-              <TabsTrigger value="stops">Collection Stops</TabsTrigger>
-              <TabsTrigger value="samples">Samples</TabsTrigger>
-              <TabsTrigger value="attachments">Attachments</TabsTrigger>
-            </TabsList>
-                      
-            <TabsContent value="info" className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <Truck className="h-4 w-4 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Assigned Team</p>
-                      <p className="font-medium">{tripData.assignedTeam}</p>
-                    </div>
-                  </div>
-                </div>
-                          
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <MapPin className="h-4 w-4 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Stops</p>
-                      <p className="font-medium">{tripData.stops}</p>
-                    </div>
-                  </div>
-                </div>
-                          
-                <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <FileText className="h-4 w-4 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Samples</p>
-                      <p className="font-medium">
-                        Total: {tripData.samplesCollected}
-                        <span className="text-sm ml-2">
-                          (Registered: {tripData.samplesRegistered} / 
-                          Unregistered: {tripData.samplesUnregistered})
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-                      
-            <TabsContent value="stops" className="pt-4">
-              {tripData.stopsList.map((stop) => (
-                <Accordion key={stop.id} type="single" collapsible className="bg-white border rounded-md overflow-hidden">
-                  <AccordionItem value="details" className="border-none">
-                    <AccordionTrigger className="px-4 py-2 hover:bg-muted/20 [&[data-state=open]>svg]:rotate-180">
-                      <div className="flex flex-1 items-center">
-                        <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mr-3">
-                          {stop.id}
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium">{stop.name}</div>
-                          <div className="text-xs text-muted-foreground flex items-center">
-                            <MapPin className="h-3 w-3 mr-1" />
-                            {stop.address}
-                          </div>
-                        </div>
-                        {stop.type !== 'checkout' && (
-                          <div className="flex items-center space-x-4 mr-6">
-                            <Badge className={getStatusColor(stop.status)}>
-                              <div className="flex items-center">
-                                {getStatusIcon(stop.status)}
-                                <span className="ml-1">{getStatusText(stop.status)}</span>
-                              </div>
-                            </Badge>
-                            <div className="text-sm">
-                              Samples: <span className="font-medium">{stop.samplesCollected || 0}</span>
-                            </div>
-                          </div>
-                        )}
-                        {stop.type === 'checkout' && (
-                          <Badge variant="outline" className="mr-6">Checkout Point</Badge>
-                        )}
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-4 pt-1 pb-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <h4 className="text-sm font-medium mb-2">Contact Information</h4>
-                          {stop.contactName && (
-                            <p className="text-sm flex items-center mb-1">
-                              <User className="h-3 w-3 mr-2" />
-                              {stop.contactName}
-                            </p>
-                          )}
-                          {stop.contactPhone && (
-                            <p className="text-sm flex items-center">
-                              <Phone className="h-3 w-3 mr-2" />
-                              {stop.contactPhone}
-                            </p>
+
+          <div className="space-y-6 pt-2">
+            {/* Trip Info Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Trip Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <Truck className="h-4 w-4 text-primary mt-0.5" />
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-muted-foreground">Assigned Team</p>
+                          {!isEditingAssignedTeam && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2"
+                              onClick={() => setIsEditingAssignedTeam(true)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
                           )}
                         </div>
-                        
-                        {stop.notes && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">Notes</h4>
-                            <p className="text-sm">{stop.notes}</p>
+                        {isEditingAssignedTeam ? (
+                          <div className="flex items-center gap-2 mt-1">
+                            <Select
+                              value={assignedTeam}
+                              onValueChange={setAssignedTeam}
+                            >
+                              <SelectTrigger className="h-8 text-sm w-[200px]">
+                                <SelectValue placeholder="Select a team" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {availableTeams.map((team) => (
+                                  <SelectItem key={team} value={team}>
+                                    {team}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              size="sm"
+                              className="h-8"
+                              onClick={handleSaveAssignedTeam}
+                            >
+                              Save
+                            </Button>
                           </div>
+                        ) : (
+                          <p className="font-medium">{tripData.assignedTeam}</p>
                         )}
                       </div>
-                      
-                      {stop.type !== 'checkout' && (
-                        <div className="mt-4">
-                          <Tabs defaultValue="samples" className="w-full">
-                            <TabsList className="w-full mb-2">
-                              <TabsTrigger value="samples">Samples ({stop.samples?.length || 0})</TabsTrigger>
-                              <TabsTrigger value="attachments">Attachments ({stop.attachments?.length || 0})</TabsTrigger>
-                            </TabsList>
-                            
-                            <TabsContent value="samples" className="pt-2">
-                              {stop.samples && stop.samples.length > 0 ? (
-                                <div className="border rounded-md overflow-hidden">
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Sample ID</TableHead>
-                                        <TableHead>Type</TableHead>
-                                        <TableHead>Time</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {stop.samples.map((sample: any) => (
-                                        <TableRow key={sample.id}>
-                                          <TableCell className="font-medium">{sample.id}</TableCell>
-                                          <TableCell>{sample.type}</TableCell>
-                                          <TableCell>{sample.time}</TableCell>
-                                          <TableCell className="text-right">
-                                            <Button 
-                                              variant="ghost" 
-                                              size="icon"
-                                              onClick={() => handleOpenSampleDetails(sample.id)}
-                                            >
-                                              <Eye className="h-4 w-4" />
-                                            </Button>
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground py-2">No samples collected at this stop.</p>
-                              )}
-                            </TabsContent>
-                            
-                            <TabsContent value="attachments" className="pt-2">
-                              {stop.attachments && stop.attachments.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  {stop.attachments.map((attachment: any) => (
-                                    <div key={attachment.id} className="flex items-center justify-between p-2 border rounded-md">
-                                      <div className="flex items-center">
-                                        {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500 mr-2" />}
-                                        {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500 mr-2" />}
-                                        {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500 mr-2" />}
-                                        <div>
-                                          <p className="text-sm font-medium">{attachment.name}</p>
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p>{getFileTypeDescription(attachment.type)}</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        </div>
-                                      </div>
-                                      <div className="flex space-x-1">
-                                        <Button variant="ghost" size="icon" onClick={() => handleViewAttachment(attachment)}>
-                                          <Eye className="h-4 w-4" />
-                                        </Button>
-                                        <Button variant="ghost" size="icon" onClick={() => handleDownloadAttachment(attachment.id)}>
-                                          <Download className="h-4 w-4" />
-                                        </Button>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              ) : (
-                                <p className="text-sm text-muted-foreground py-2">No attachments for this stop.</p>
-                              )}
-                            </TabsContent>
-                          </Tabs>
-                        </div>
-                      )}
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              ))}
-            </TabsContent>
-                      
-            <TabsContent value="samples" className="pt-4">
-              <div className="border rounded-md overflow-hidden">
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <MapPin className="h-4 w-4 text-primary mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Stops</p>
+                        <p className="font-medium">{tripData.stops}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <FileText className="h-4 w-4 text-primary mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Registered Samples</p>
+                        <p className="font-medium">{tripData.samplesRegistered}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="flex items-start space-x-3">
+                      <AlertTriangle className="h-4 w-4 text-primary mt-0.5" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Total Unregistered Samples</p>
+                        <p className="font-medium">{tripData.samplesUnregistered}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Collection Stops Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Collection Stops</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Sample ID</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Time</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="w-12 text-center">#</TableHead>
+                      <TableHead>Stop Name</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Contact Person</TableHead>
+                      <TableHead>Contact Number</TableHead>
+                      <TableHead>Registered Samples</TableHead>
+                      <TableHead>Unregistered Samples</TableHead>
+                      <TableHead>Attachments</TableHead>
+                      <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tripData.stopsList
-                      .filter((stop: any) => stop.samples)
-                      .flatMap((stop: any) => 
-                        stop.samples.map((sample: any) => ({
-                          ...sample,
-                          location: stop.name
-                        }))
-                      )
-                      .map((sample: any) => (
-                        <TableRow key={sample.id}>
-                          <TableCell className="font-medium">{sample.id}</TableCell>
-                          <TableCell>{sample.type}</TableCell>
-                          <TableCell>{sample.location}</TableCell>
-                          <TableCell>{sample.time}</TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleOpenSampleDetails(sample.id)}
+                    {tripData.stopsList.map((stop: any) => (
+                      <TableRow key={stop.id}>
+                        <TableCell className="text-center">
+                          <div className="h-6 w-6 rounded-full bg-primary text-white flex items-center justify-center text-xs mx-auto">
+                            {stop.id}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{stop.name}</div>
+                            <div className="text-xs text-muted-foreground flex items-center">
+                              <MapPin className="h-3 w-3 mr-1" />
+                              {stop.address}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {stop.status === "completed" && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                              <CheckCircle className="h-3 w-3 mr-1" /> Completed
+                            </Badge>
+                          )}
+                          {stop.status === "in-progress" && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Clock className="h-3 w-3 mr-1" /> Active
+                            </Badge>
+                          )}
+                          {(stop.status === "pending" || stop.status === "upcoming" || !stop.status) && (
+                            <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                              <AlertCircle className="h-3 w-3 mr-1" /> Upcoming
+                            </Badge>
+                          )}
+                          {stop.status === "cancelled" && (
+                            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                              <XCircle className="h-3 w-3 mr-1" /> Cancelled
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.contactName ? (
+                            <div className="flex items-center">
+                              <User className="h-3 w-3 mr-1 text-muted-foreground" />
+                              <span className="text-sm">{stop.contactName}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.contactPhone ? (
+                            <div className="flex items-center">
+                              <Phone className="h-3 w-3 mr-1 text-muted-foreground" />
+                              <span className="text-sm">{stop.contactPhone}</span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.samplesRegistered ? (
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto text-primary hover:underline flex items-center gap-1"
+                              onClick={() => {
+                                // Show registered samples modal
+                                if (stop.samples && stop.samples.length > 0) {
+                                  // Open a modal with all samples from this stop
+                                  setSelectedStop(stop);
+                                  setShowSamplesModal(true);
+                                }
+                              }}
                             >
-                              <Eye className="h-4 w-4" />
+                              <span>{stop.samplesRegistered} samples</span>
+                              <Eye className="h-3.5 w-3.5 text-primary" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
-                      
-            <TabsContent value="attachments" className="pt-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {tripData.stopsList
-                  .filter((stop: any) => stop.attachments)
-                  .flatMap((stop: any) => 
-                    stop.attachments.map((attachment: any) => ({
-                      ...attachment,
-                      location: stop.name
-                    }))
-                  )
-                  .map((attachment: any) => (
-                    <div key={attachment.id} className="flex flex-col p-3 border rounded-md">
-                      <div className="flex items-center mb-2">
-                        {attachment.type === "pdf" && <FileText className="h-6 w-6 text-red-500 mr-2" />}
-                        {attachment.type === "xlsx" && <FileText className="h-6 w-6 text-green-500 mr-2" />}
-                        {attachment.type === "image" && <FileImage className="h-6 w-6 text-blue-500 mr-2" />}
-                        <div>
-                          <p className="font-medium">{attachment.name}</p>
-                          <Badge variant="outline" className="text-xs">{attachment.type.toUpperCase()}</Badge>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-3">
-                        Location: {attachment.location}
-                      </p>
-                      <div className="flex mt-auto space-x-2">
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleViewAttachment(attachment)}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          View
-                        </Button>
-                        <Button variant="outline" size="sm" className="flex-1" onClick={() => handleDownloadAttachment(attachment.id)}>
-                          <Download className="h-4 w-4 mr-1" />
-                          Download
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-              
-              {tripData.stopsList.every((stop: any) => !stop.attachments || stop.attachments.length === 0) && (
-                <div className="text-center py-8">
-                  <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No attachments available for this trip</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-                  
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.samplesUnregistered && stop.samplesUnregistered > 0 ? (
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto"
+                              onClick={() => {
+                                setSelectedStop(stop);
+                                setShowUnregisteredSamplesModal(true);
+                              }}
+                            >
+                              <Badge variant="destructive" className="flex items-center gap-1">
+                                <span>{stop.samplesUnregistered} unregistered</span>
+                                <Eye className="h-3.5 w-3.5" />
+                              </Badge>
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.attachments && stop.attachments.length > 0 ? (
+                            <Button
+                              variant="link"
+                              className="p-0 h-auto text-primary hover:underline flex items-center gap-1"
+                              onClick={() => {
+                                // Show attachments modal
+                                if (stop.attachments && stop.attachments.length > 0) {
+                                  setSelectedStop(stop);
+                                  setShowAttachmentsModal(true);
+                                }
+                              }}
+                            >
+                              <span>{stop.attachments.length} {stop.attachments.length === 1 ? "file" : "files"}</span>
+                              <FileImage className="h-3.5 w-3.5 text-primary" />
+                            </Button>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {stop.notes ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="max-w-[200px] truncate text-sm h-5 cursor-default overflow-hidden">
+                                    {stop.notes}
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent className="max-w-sm p-2 bg-white border shadow-lg rounded-md">
+                                  <div className="text-sm">
+                                    <p className="text-muted-foreground">{stop.notes}</p>
+                                  </div>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <span className="text-muted-foreground text-sm h-5">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+
+          </div>
+
           <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 mt-4 border-t">
-            <div className="flex flex-1 gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={handleDownloadSummary}>
-                <Download className="mr-2 h-4 w-4" />
-                Download Summary
-              </Button>
-            </div>
             <div className="flex gap-2">
               {isTripCancellable() && (
                 <Button variant="destructive" size="sm" onClick={() => setShowCancelDialog(true)}>
@@ -719,17 +850,11 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Trip
               </Button>
-              {tripData.status === 'active' && (
-                <Button size="sm" onClick={handleConfirmCollection}>
-                  <CheckCircle className="mr-2 h-4 w-4" />
-                  Confirm Collection
-                </Button>
-              )}
             </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-              
+
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -744,7 +869,7 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-              
+
       <AlertDialog open={showSampleDetails} onOpenChange={setShowSampleDetails}>
         <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
@@ -788,7 +913,7 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-              
+
       <Dialog open={showAttachment !== null} onOpenChange={(open) => {
         if (!open) setShowAttachment(null);
       }}>
@@ -801,6 +926,183 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
               <img src={`/images/${showAttachment}`} alt="Attachment Preview" className="w-full object-contain max-h-[60vh]" />
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Samples Modal */}
+      <Dialog open={showSamplesModal} onOpenChange={setShowSamplesModal}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Registered Samples</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {selectedStop?.name} • {selectedStop?.samplesRegistered} samples
+            </p>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sample ID</TableHead>
+                  <TableHead>Type</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedStop?.samples?.map((sample: any) => (
+                  <TableRow key={sample.id}>
+                    <TableCell className="font-medium">{sample.id}</TableCell>
+                    <TableCell>{sample.type}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          {/* No footer with close button */}
+        </DialogContent>
+      </Dialog>
+
+      {/* Unregistered Samples Modal */}
+      <Dialog open={showUnregisteredSamplesModal} onOpenChange={setShowUnregisteredSamplesModal}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Unregistered Samples</DialogTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {selectedStop?.name} • {selectedStop?.samplesUnregistered} samples
+            </p>
+          </DialogHeader>
+          <div className="py-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Sample Type</TableHead>
+                  <TableHead className="text-right">Quantity</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedStop?.unregisteredSamples
+                  ?.filter((sample: any) => sample.quantity > 0)
+                  .map((sample: any, index: number) => (
+                    <TableRow key={`unregistered-${index}`}>
+                      <TableCell className="font-medium">{sample.type}</TableCell>
+                      <TableCell className="text-right">{sample.quantity}</TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+          {/* No footer with close button */}
+        </DialogContent>
+      </Dialog>
+
+      {/* Attachments Modal */}
+      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal}>
+        <DialogContent className="max-w-6xl w-[90vw] max-h-[80vh] p-0 overflow-hidden">
+          <div className="flex h-[80vh]">
+            {/* Left sidebar with attachment list */}
+            <div className="w-64 border-r bg-gray-50 overflow-y-auto">
+              <div className="p-4 border-b bg-white sticky top-0 z-10">
+                <h3 className="font-medium">Attachments</h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedStop?.attachments?.length || 0} items
+                </p>
+              </div>
+              <div className="divide-y">
+                {selectedStop?.attachments?.map((attachment: any, index: number) => (
+                  <div
+                    key={attachment.id}
+                    className={`p-3 cursor-pointer hover:bg-gray-100 ${index === 0 ? 'bg-gray-100' : ''}`}
+                    onClick={() => handleViewAttachment(attachment)}
+                  >
+                    <div className="flex items-center space-x-2">
+                      {attachment.type === "pdf" && <FileText className="h-5 w-5 text-red-500" />}
+                      {attachment.type === "xlsx" && <FileText className="h-5 w-5 text-green-500" />}
+                      {attachment.type === "image" && <FileImage className="h-5 w-5 text-blue-500" />}
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{attachment.name}</p>
+                        <Badge variant="outline" className="mt-1 text-xs">{attachment.type.toUpperCase()}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Main content area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Header */}
+              <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+                <div>
+                  <h2 className="text-lg font-semibold">{selectedStop?.name}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedStop?.attachments?.[0]?.name} • {selectedStop?.attachments?.[0]?.type.toUpperCase()}
+                  </p>
+                </div>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDownloadAttachment(selectedStop?.attachments?.[0]?.id)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAttachmentsModal(false)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              {/* Preview area */}
+              <div className="flex-1 p-6 overflow-auto flex items-center justify-center bg-gray-50">
+                {selectedStop?.attachments?.[0]?.type === "image" ? (
+                  <div className="max-h-full max-w-full overflow-hidden rounded-md shadow-lg">
+                    <img
+                      src={`/images/sample-image.jpg`}
+                      alt={selectedStop?.attachments?.[0]?.name}
+                      className="max-h-[60vh] max-w-full object-contain"
+                    />
+                  </div>
+                ) : selectedStop?.attachments?.[0]?.type === "pdf" ? (
+                  <div className="bg-white p-8 rounded-md shadow-lg w-full max-w-3xl">
+                    <div className="flex items-center justify-center h-[50vh] border-2 border-dashed border-gray-300 rounded-md">
+                      <div className="text-center">
+                        <FileText className="h-16 w-16 text-red-500 mx-auto mb-4" />
+                        <h3 className="font-medium text-lg mb-2">{selectedStop?.attachments?.[0]?.name}</h3>
+                        <p className="text-muted-foreground mb-4">PDF Preview not available</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDownloadAttachment(selectedStop?.attachments?.[0]?.id)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download to View
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white p-8 rounded-md shadow-lg w-full max-w-3xl">
+                    <div className="flex items-center justify-center h-[50vh] border-2 border-dashed border-gray-300 rounded-md">
+                      <div className="text-center">
+                        <FileText className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                        <h3 className="font-medium text-lg mb-2">{selectedStop?.attachments?.[0]?.name}</h3>
+                        <p className="text-muted-foreground mb-4">Preview not available for this file type</p>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDownloadAttachment(selectedStop?.attachments?.[0]?.id)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          Download to View
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>

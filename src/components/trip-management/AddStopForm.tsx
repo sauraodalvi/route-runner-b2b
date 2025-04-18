@@ -9,18 +9,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Stop } from "./CreateRouteForm";
 import { toast } from "@/hooks/use-toast";
-import { 
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger 
+  TooltipTrigger
 } from "@/components/ui/tooltip";
-import { 
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger
-} from "@/components/ui/accordion";
+// Accordion imports removed
 import { Badge } from "@/components/ui/badge";
 
 interface AddStopFormProps {
@@ -30,7 +25,7 @@ interface AddStopFormProps {
 }
 
 const timeSlots = [
-  "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM", 
+  "08:00 AM", "08:30 AM", "09:00 AM", "09:30 AM",
   "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
   "12:00 PM", "12:30 PM", "01:00 PM", "01:30 PM",
   "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
@@ -38,11 +33,11 @@ const timeSlots = [
 ];
 
 const organizations = [
-  { id: "1", name: "Medlife Hospital", address: "123 Main St, Suite 400, New York, NY 10001", inSystem: true },
-  { id: "2", name: "City Medical Center", address: "456 Park Ave, New York, NY 10002", inSystem: true },
-  { id: "3", name: "HealthFirst Clinic", address: "789 Broadway, New York, NY 10003", inSystem: true },
-  { id: "4", name: "CarePoint Diagnostics", address: "321 5th Ave, New York, NY 10004", inSystem: true },
-  { id: "5", name: "New Medical Facility", address: "555 Hudson St, New York, NY 10014", inSystem: false },
+  { id: "1", name: "Medlife Hospital", address: "123 Main St, Suite 400, New York, NY 10001", inSystem: true, paymentType: "Prepaid" },
+  { id: "2", name: "City Medical Center", address: "456 Park Ave, New York, NY 10002", inSystem: true, paymentType: "Post Paid" },
+  { id: "3", name: "HealthFirst Clinic", address: "789 Broadway, New York, NY 10003", inSystem: true, paymentType: "Walkin" },
+  { id: "4", name: "CarePoint Diagnostics", address: "321 5th Ave, New York, NY 10004", inSystem: true, paymentType: "Prepaid" },
+  { id: "5", name: "New Medical Facility", address: "555 Hudson St, New York, NY 10014", inSystem: true, paymentType: "Post Paid" },
 ];
 
 const formSchema = z.object({
@@ -85,8 +80,8 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
 
   const stopType = form.watch("type");
   const orgId = form.watch("organization");
-  const [isMapPickerOpen, setIsMapPickerOpen] = useState(false);
-  const [selectedOrgInSystem, setSelectedOrgInSystem] = useState<boolean | null>(null);
+  // Map picker removed
+  // Organization system status tracking removed
 
   useEffect(() => {
     if (orgId) {
@@ -94,7 +89,7 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
       if (selectedOrg) {
         form.setValue("address", selectedOrg.address);
         form.setValue("name", selectedOrg.name);
-        setSelectedOrgInSystem(selectedOrg.inSystem);
+        // Organization system status tracking removed
       }
     }
   }, [orgId, form]);
@@ -110,19 +105,11 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
         organization: values.organization,
         contactName: values.contactName,
         contactPhone: values.contactPhone,
-        inSystem: selectedOrgInSystem || false,
+        // inSystem property removed
       };
-      
-      if (values.organization) {
-        const orgIndex = organizations.findIndex(org => org.id === values.organization);
-        if (orgIndex !== -1 && organizations[orgIndex].address !== values.address) {
-          toast({
-            title: "Organization Updated",
-            description: `Address updated in Organization Management for ${organizations[orgIndex].name}`,
-          });
-        }
-      }
-      
+
+      // Address changes are not saved to the organization record
+
       onSubmit(stop);
       form.reset();
     } catch (error) {
@@ -135,10 +122,7 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
     }
   };
 
-  const handleAddressSelection = (address: string) => {
-    form.setValue("address", address);
-    setIsMapPickerOpen(false);
-  };
+  // Address selection function removed
 
   return (
     <Form {...form}>
@@ -155,7 +139,7 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pickup">Pickup Point</SelectItem>
-                  <SelectItem value="checkpoint">Checkpoint</SelectItem>
+                  <SelectItem value="checkpoint">Drop-off Point</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -172,19 +156,13 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
                 <FormItem>
                   <div className="flex items-center space-x-2">
                     <FormLabel>Organization</FormLabel>
-                    {selectedOrgInSystem !== null && (
-                      <Badge className={selectedOrgInSystem ? "bg-green-500 hover:bg-green-600" : "bg-orange-500 hover:bg-orange-600"}>
-                        {selectedOrgInSystem ? "In System" : "Not in System"}
-                      </Badge>
-                    )}
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                         </TooltipTrigger>
                         <TooltipContent className="max-w-sm">
-                          <p>Organization details are fetched from Organization Management. For accurate results, update organization details in Organization Management.</p>
-                          <p className="mt-2">Note: Editing the address here will update the organization in Organization Management.</p>
+                          <p>Edited address won't be saved against the organization</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
@@ -198,11 +176,11 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
                         <SelectItem key={org.id} value={org.id}>
                           <div className="flex items-center">
                             {org.name}
-                            <Badge 
-                              variant="outline" 
-                              className={`ml-2 ${org.inSystem ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}`}
+                            <Badge
+                              variant="outline"
+                              className="ml-2 bg-blue-100 text-blue-800"
                             >
-                              {org.inSystem ? "In System" : "New"}
+                              {org.paymentType}
                             </Badge>
                           </div>
                         </SelectItem>
@@ -214,12 +192,7 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
               )}
             />
 
-            <div className="bg-muted/30 p-3 rounded-md text-sm text-muted-foreground border border-muted">
-              <p className="flex items-start">
-                <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-                Organization details are fetched from Organization Management. For accurate results, update organization details in Organization Management. Note: Editing the address here will update the organization in Organization Management.
-              </p>
-            </div>
+
           </div>
         )}
 
@@ -243,20 +216,9 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
           render={({ field }) => (
             <FormItem>
               <FormLabel>Address</FormLabel>
-              <div className="flex space-x-2">
-                <FormControl className="flex-1">
-                  <Input placeholder="Enter address" {...field} />
-                </FormControl>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  className="shrink-0"
-                  onClick={() => setIsMapPickerOpen(true)}
-                >
-                  <MapPin className="h-4 w-4" />
-                </Button>
-              </div>
+              <FormControl>
+                <Input placeholder="Enter address" {...field} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -288,42 +250,38 @@ export function AddStopForm({ onSubmit, onCancel, initialData }: AddStopFormProp
           )}
         />
 
-        <Accordion type="single" collapsible className="border rounded-md">
-          <AccordionItem value="contact">
-            <AccordionTrigger className="px-4">Contact Information</AccordionTrigger>
-            <AccordionContent className="p-4 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="contactName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter contact name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        <div className="space-y-4">
+          <h3 className="text-sm font-medium">Contact Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="contactName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter contact name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-                <FormField
-                  control={form.control}
-                  name="contactPhone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contact Phone</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            <FormField
+              control={form.control}
+              name="contactPhone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contact Phone</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter phone number" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
 
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>

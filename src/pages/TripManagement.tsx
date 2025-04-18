@@ -1,9 +1,17 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layouts/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Calendar as CalendarIcon, Filter, Map, LayoutGrid } from "lucide-react";
+import { Plus, Download, Calendar as CalendarIcon, Filter } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
@@ -13,10 +21,12 @@ import { format, addDays } from "date-fns";
 import { Route } from "@/types";
 import { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // Not needed after removing map view
 import { Calendar } from "@/components/ui/calendar";
 import { sampleRoutes } from "@/data/sampleRoutes";
-import { RouterMapView } from "@/components/trip-management/RouterMapView";
+import { StopWiseView } from "@/components/trip-management/StopWiseView";
+import { TripDetailsModal } from "@/components/trip-management/TripDetailsModal";
+// Map view removed
 
 // Use sample data from our data file
 const mockRoutes: Route[] = sampleRoutes.length > 0 ? sampleRoutes : [
@@ -104,163 +114,13 @@ const mockRoutes: Route[] = sampleRoutes.length > 0 ? sampleRoutes : [
         contactPhone: "555-345-6789",
         organization: "1",
         inSystem: true
-      },
-      {
-        id: 6,
-        name: "Checkpoint Beta",
-        address: "303 Midtown Blvd, New York, NY 10006",
-        type: "checkpoint",
-        time: "12:45 PM",
-        status: "on-time",
-        notes: "Final verification point"
-      }
-    ]
-  },
-  {
-    id: "2",
-    tripId: "TR-002-5678",
-    name: "Uptown Labs Pickup",
-    date: "2025-04-19",
-    startTime: "09:15 AM",
-    endTime: "02:45 PM",
-    status: "upcoming",
-    assignedTeam: "Team Beta",
-    stopCount: 8,
-    samplesCollected: 18,
-    unregisteredSamples: 2,
-    attachments: "1 file",
-    stops: [
-      {
-        id: 1,
-        name: "Uptown Medical Lab",
-        address: "987 North St, New York, NY 10025",
-        type: "pickup",
-        time: "09:30 AM",
-        status: "on-time",
-        samplesCollected: 10,
-        samplesRegistered: 9,
-        samplesUnregistered: 1,
-        contactName: "Lab Director Smith",
-        contactPhone: "555-444-3333",
-        organization: "3",
-        inSystem: true
-      },
-      {
-        id: 2,
-        name: "University Hospital",
-        address: "222 College Ave, New York, NY 10027",
-        type: "pickup",
-        time: "11:00 AM",
-        status: "on-time",
-        samplesCollected: 8,
-        samplesRegistered: 7,
-        samplesUnregistered: 1,
-        contactName: "Dr. Thompson",
-        contactPhone: "555-222-1111",
-        organization: "4",
-        inSystem: false,
-        notes: "New client, first pickup"
-      },
-      {
-        id: 3,
-        name: "Northside Clinic",
-        address: "333 North End, New York, NY 10028",
-        type: "pickup",
-        time: "12:30 PM",
-        status: "on-time",
-        samplesCollected: 6,
-        samplesRegistered: 6,
-        samplesUnregistered: 0,
-        contactName: "Clinic Director",
-        contactPhone: "555-666-7777",
-        organization: "2",
-        inSystem: true
-      },
-      {
-        id: 4,
-        name: "Checkpoint Gamma",
-        address: "444 Uptown Ave, New York, NY 10029",
-        type: "checkpoint",
-        time: "01:15 PM",
-        status: "on-time",
-        notes: "Mid-route verification"
-      }
-    ]
-  },
-  {
-    id: "3",
-    tripId: "TR-003-9012",
-    name: "Hospital Circuit",
-    date: "2025-04-15",
-    startTime: "07:30 AM",
-    endTime: "03:15 PM",
-    status: "completed",
-    assignedTeam: "Team Gamma",
-    stopCount: 12,
-    samplesCollected: 25,
-    unregisteredSamples: 0,
-    attachments: "4 files",
-    stops: [
-      {
-        id: 1,
-        name: "General Hospital",
-        address: "333 Health St, New York, NY 10012",
-        type: "pickup",
-        time: "08:00 AM",
-        status: "on-time",
-        samplesCollected: 12,
-        samplesRegistered: 12,
-        samplesUnregistered: 0,
-        contactName: "Hospital Administrator",
-        contactPhone: "555-888-7777",
-        organization: "1",
-        inSystem: true
-      },
-      {
-        id: 2,
-        name: "Checkpoint Beta",
-        address: "444 Safety Rd, New York, NY 10013",
-        type: "checkpoint",
-        time: "09:45 AM",
-        status: "on-time"
-      },
-      {
-        id: 3,
-        name: "Eastside Clinic",
-        address: "555 East St, New York, NY 10014",
-        type: "pickup",
-        time: "11:30 AM",
-        status: "delayed",
-        samplesCollected: 8,
-        samplesRegistered: 8,
-        samplesUnregistered: 0,
-        contactName: "Clinic Manager",
-        contactPhone: "555-333-2222",
-        organization: "2",
-        inSystem: true,
-        notes: "Delayed due to clinic procedures"
-      },
-      {
-        id: 4,
-        name: "Riverside Medical",
-        address: "666 West St, New York, NY 10015",
-        type: "pickup",
-        time: "01:30 PM",
-        status: "on-time",
-        samplesCollected: 5,
-        samplesRegistered: 5,
-        samplesUnregistered: 0,
-        contactName: "Dr. Rodriguez",
-        contactPhone: "555-111-0000",
-        organization: "3",
-        inSystem: true
       }
     ]
   }
 ];
 
 const TripManagement = () => {
-  const navigate = useNavigate();
+  // Navigation removed with map view
   const [showCreateRouteDialog, setShowCreateRouteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("active");
@@ -270,8 +130,13 @@ const TripManagement = () => {
   });
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [routeToEdit, setRouteToEdit] = useState<any | null>(null);
-  const [showMapView, setShowMapView] = useState(false);
+  // Map view removed
+  const [showPickupPoints, setShowPickupPoints] = useState(true);
+  const [showDropoffPoints, setShowDropoffPoints] = useState(true);
   const [routes, setRoutes] = useState<Route[]>(mockRoutes);
+  const [viewMode, setViewMode] = useState("trip-wise");
+  const [showTripDetailsModal, setShowTripDetailsModal] = useState(false);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
 
   // Log routes when they change
   useEffect(() => {
@@ -291,15 +156,122 @@ const TripManagement = () => {
     const currentDate = new Date().toLocaleDateString().replace(/\//g, '-');
     toast({
       title: "Export Started",
-      description: `Your data is being exported to Excel as routes-${currentDate}.xlsx`,
+      description: `Your data is being exported to Excel as stops-${currentDate}.xlsx`,
     });
+
+    // Get filtered routes based on date range
+    const filteredRoutes = routes.filter(route => {
+      if (!date?.from || !date?.to) return true;
+
+      const routeDate = new Date(route.date);
+      return routeDate >= date.from && routeDate <= date.to;
+    });
+
+    // Create CSV content with stop-wise data
+    const headers = [
+      "Trip ID",
+      "Route Name",
+      "Date",
+      "Stop Name",
+      "Stop Type",
+      "Time Reached",
+      "Status",
+      "Assigned Team",
+      "Contact Person",
+      "Contact Number",
+      "Registered Samples",
+      "Unregistered Samples",
+      "Attachments",
+      "Notes"
+    ];
+
+    let csvContent = headers.join(",") + "\n";
+
+    // Add data rows for each stop in each route
+    filteredRoutes.forEach(route => {
+      if (!route.stops || route.stops.length === 0) {
+        // If no stops, add a single row with route info
+        const row = [
+          route.tripId,
+          route.name,
+          route.date,
+          "N/A", // Stop Name
+          "N/A", // Stop Type
+          "N/A", // Time Reached
+          route.status,
+          route.assignedTeam || 'Unassigned',
+          "N/A", // Contact Person
+          "N/A", // Contact Number
+          route.samplesCollected || 0,
+          route.unregisteredSamples || 0,
+          route.attachments || 0,
+          "No stops available"
+        ];
+
+        // Escape any commas in the data
+        const escapedRow = escapeCSVRow(row);
+        csvContent += escapedRow.join(",") + "\n";
+      } else {
+        // Add a row for each stop
+        route.stops.forEach(stop => {
+          const row = [
+            route.tripId,
+            route.name,
+            route.date,
+            stop.name,
+            stop.type === "pickup" ? "Pickup Point" : "Drop-off Point",
+            stop.time || "N/A",
+            stop.status || route.status,
+            route.assignedTeam || 'Unassigned',
+            stop.contactName || "N/A",
+            stop.contactPhone || "N/A",
+            stop.samplesRegistered || 0,
+            stop.samplesUnregistered || 0,
+            stop.attachments ? "Yes" : "No",
+            stop.notes || ""
+          ];
+
+          // Escape any commas in the data
+          const escapedRow = escapeCSVRow(row);
+          csvContent += escapedRow.join(",") + "\n";
+        });
+      }
+    });
+
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+    // Create a download link and trigger the download
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", `stops-${currentDate}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     setTimeout(() => {
       toast({
         title: "Export Completed",
-        description: "Your data has been exported successfully",
+        description: "Your stop-wise data has been exported successfully as a CSV file that can be opened in Excel",
       });
-    }, 2000);
+    }, 1000);
+  };
+
+  // Helper function to escape CSV values
+  const escapeCSVRow = (row: any[]) => {
+    return row.map(field => {
+      if (field === null || field === undefined) return '';
+      const fieldStr = String(field);
+      // If field contains comma, quote, or newline, wrap it in quotes
+      if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n')) {
+        return `"${fieldStr.replace(/"/g, '""')}"`; // Escape quotes by doubling them
+      }
+      return fieldStr;
+    });
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -307,7 +279,7 @@ const TripManagement = () => {
     if (range?.from && range?.to) {
       toast({
         title: "Date Range Applied",
-        description: `Showing trips from ${format(range.from, "PPP")} to ${format(range.to, "PPP")}`,
+        description: `Showing trips from ${format(range.from, "MMM d, yyyy")} to ${format(range.to, "MMM d, yyyy")}`,
       });
     }
   };
@@ -317,26 +289,46 @@ const TripManagement = () => {
     setShowCreateRouteDialog(true);
   };
 
-  const viewTripDetails = (routeId: string) => {
-    navigate(`/trip-management/details/${routeId}`);
+  const openCopyRouteDialog = (route: any) => {
+    // Create a copy of the route without name, start date, and assigned team
+    const routeCopy = {
+      ...route,
+      id: `copy-${route.id}`,
+      name: "", // Clear the name
+      date: "", // Clear the date
+      assignedTeam: "", // Clear the assigned team
+      isCopy: true // Flag to indicate this is a copy operation
+    };
+
+    setRouteToEdit(routeCopy);
+    setShowCreateRouteDialog(true);
+
+    toast({
+      title: "Copy Route",
+      description: "Creating a copy of the route. Please provide a new name and start date.",
+    });
   };
 
-  const toggleView = () => {
-    setShowMapView(!showMapView);
+  const viewTripDetails = (routeId: string) => {
+    // For trip-wise view, open the modal instead of navigating
+    setSelectedTripId(routeId);
+    setShowTripDetailsModal(true);
   };
+
+  // Map view toggle removed
 
   // Filter routes based on active tab
   const getRoutesForTab = (tabStatus: string) => {
-    console.log('Current routes:', routes);
-    console.log('Tab status:', tabStatus);
-
     if (tabStatus === 'all') {
-      console.log('Returning all routes:', routes);
+      return routes;
+    }
+
+    // Special handling for cancelled tab - we'll show all routes but filter for cancelled stops in StopWiseView
+    if (tabStatus === 'cancelled') {
       return routes;
     }
 
     const filteredRoutes = routes.filter(route => route.status === tabStatus);
-    console.log('Filtered routes:', filteredRoutes);
     return filteredRoutes;
   };
 
@@ -373,10 +365,10 @@ const TripManagement = () => {
                   {date?.from ? (
                     date.to ? (
                       <>
-                        {format(date.from, "LLL d")} - {format(date.to, "LLL d")}
+                        {format(date.from, "MMM d, yyyy")} - {format(date.to, "MMM d, yyyy")}
                       </>
                     ) : (
-                      format(date.from, "LLL d")
+                      format(date.from, "MMM d, yyyy")
                     )
                   ) : (
                     "Date Range"
@@ -396,19 +388,7 @@ const TripManagement = () => {
               </PopoverContent>
             </Popover>
 
-            <Button variant="outline" size="sm" onClick={toggleView}>
-              {showMapView ? (
-                <>
-                  <LayoutGrid className="mr-2 h-4 w-4" />
-                  List View
-                </>
-              ) : (
-                <>
-                  <Map className="mr-2 h-4 w-4" />
-                  Map View
-                </>
-              )}
-            </Button>
+            {/* Map view toggle button removed */}
 
             <Button variant="outline" size="sm" onClick={handleExport}>
               <Download className="mr-2 h-4 w-4" />
@@ -425,90 +405,117 @@ const TripManagement = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="active">Active Trips</TabsTrigger>
-            <TabsTrigger value="upcoming">Upcoming Trips</TabsTrigger>
-            <TabsTrigger value="completed">Completed Trips</TabsTrigger>
-            <TabsTrigger value="all">All Trips</TabsTrigger>
-          </TabsList>
-          <TabsContent value="active" className="pt-4">
+        {/* Tab Navigation Container */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          {/* View Mode Tabs */}
+          <div>
+            <Tabs defaultValue="trip-wise" value={viewMode} onValueChange={setViewMode}>
+              <TabsList className="grid w-full max-w-md grid-cols-2">
+                <TabsTrigger value="trip-wise">Trip wise</TabsTrigger>
+                <TabsTrigger value="stop-wise">Stop wise</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          {/* Trip Status Tabs */}
+          <div>
+            <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="active">{viewMode === "stop-wise" ? "Active Stops" : "Active Trips"}</TabsTrigger>
+                <TabsTrigger value="upcoming">{viewMode === "stop-wise" ? "Upcoming Stops" : "Upcoming Trips"}</TabsTrigger>
+                <TabsTrigger value="completed">{viewMode === "stop-wise" ? "Completed Stops" : "Completed Trips"}</TabsTrigger>
+                {viewMode === "stop-wise" && (
+                  <TabsTrigger value="cancelled">Cancelled Stops</TabsTrigger>
+                )}
+                <TabsTrigger value="all">{viewMode === "stop-wise" ? "All Stops" : "All Trips"}</TabsTrigger>
+                {viewMode === "stop-wise" && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2 relative">
+                        <Filter className="h-4 w-4" />
+                        {(!showPickupPoints || !showDropoffPoints) && (
+                          <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                            {!showPickupPoints && !showDropoffPoints ? "!" : ""}
+                          </Badge>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <div className="p-2">
+                        <h4 className="mb-2 text-sm font-medium">Stop Types</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="show-pickup"
+                              checked={showPickupPoints}
+                              onCheckedChange={(checked) => {
+                                if (typeof checked === 'boolean') {
+                                  setShowPickupPoints(checked);
+                                }
+                              }}
+                            />
+                            <Label htmlFor="show-pickup" className="text-sm font-normal">
+                              Pickup Points
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="show-dropoff"
+                              checked={showDropoffPoints}
+                              onCheckedChange={(checked) => {
+                                if (typeof checked === 'boolean') {
+                                  setShowDropoffPoints(checked);
+                                }
+                              }}
+                            />
+                            <Label htmlFor="show-dropoff" className="text-sm font-normal">
+                              Drop-off Points
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+
+        {/* View Content */}
+        <Tabs defaultValue="trip-wise" value={viewMode} className="mt-4">
+          {/* Trip Wise View */}
+          <TabsContent value="trip-wise" className="space-y-4">
             <Card>
               <CardContent className="p-0">
-                {showMapView ? (
-                  <div className="h-[600px] relative">
-                    <RouterMapView status="active" searchQuery={searchQuery} dateRange={date} />
-                  </div>
-                ) : (
-                  <RoutesList
-                    routes={getRoutesForTab('active')}
-                    status="active"
-                    searchQuery={searchQuery}
-                    dateRange={date}
-                    onEditRoute={openEditRouteDialog}
-                    onViewDetails={viewTripDetails}
-                  />
-                )}
+                <RoutesList
+                  routes={getRoutesForTab(activeTab)}
+                  status={activeTab}
+                  searchQuery={searchQuery}
+                  dateRange={date}
+                  onEditRoute={openEditRouteDialog}
+                  onViewDetails={viewTripDetails}
+                  onCopyRoute={openCopyRouteDialog}
+                />
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="upcoming" className="pt-4">
+
+          {/* Stop Wise View */}
+          <TabsContent value="stop-wise" className="space-y-4">
             <Card>
               <CardContent className="p-0">
-                {showMapView ? (
-                  <div className="h-[600px] relative">
-                    <RouterMapView status="upcoming" searchQuery={searchQuery} dateRange={date} />
-                  </div>
-                ) : (
-                  <RoutesList
-                    routes={getRoutesForTab('upcoming')}
-                    status="upcoming"
-                    searchQuery={searchQuery}
-                    dateRange={date}
-                    onEditRoute={openEditRouteDialog}
-                    onViewDetails={viewTripDetails}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="completed" className="pt-4">
-            <Card>
-              <CardContent className="p-0">
-                {showMapView ? (
-                  <div className="h-[600px] relative">
-                    <RouterMapView status="completed" searchQuery={searchQuery} dateRange={date} />
-                  </div>
-                ) : (
-                  <RoutesList
-                    routes={getRoutesForTab('completed')}
-                    status="completed"
-                    searchQuery={searchQuery}
-                    dateRange={date}
-                    onEditRoute={openEditRouteDialog}
-                    onViewDetails={viewTripDetails}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="all" className="pt-4">
-            <Card>
-              <CardContent className="p-0">
-                {showMapView ? (
-                  <div className="h-[600px] relative">
-                    <RouterMapView status="all" searchQuery={searchQuery} dateRange={date} />
-                  </div>
-                ) : (
-                  <RoutesList
-                    routes={getRoutesForTab('all')}
-                    status="all"
-                    searchQuery={searchQuery}
-                    dateRange={date}
-                    onEditRoute={openEditRouteDialog}
-                    onViewDetails={viewTripDetails}
-                  />
-                )}
+                <StopWiseView
+                  routes={getRoutesForTab(activeTab)}
+                  status={activeTab}
+                  searchQuery={searchQuery}
+                  dateRange={date}
+                  onViewTripDetails={viewTripDetails}
+                  onEditRoute={openEditRouteDialog}
+                  onCopyRoute={openCopyRouteDialog}
+                  showPickupPoints={showPickupPoints}
+                  showCheckpoints={showDropoffPoints}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -517,7 +524,11 @@ const TripManagement = () => {
         <Dialog open={showCreateRouteDialog} onOpenChange={setShowCreateRouteDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{routeToEdit ? 'Edit Route' : 'Create New Route'}</DialogTitle>
+              <DialogTitle>
+                {routeToEdit ?
+                  (routeToEdit.isCopy ? 'Copy Route' : 'Edit Route') :
+                  'Create New Route'}
+              </DialogTitle>
             </DialogHeader>
             <CreateRouteForm
               onCancel={() => setShowCreateRouteDialog(false)}
@@ -525,6 +536,16 @@ const TripManagement = () => {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Trip Details Modal */}
+        {selectedTripId && (
+          <TripDetailsModal
+            open={showTripDetailsModal}
+            onOpenChange={setShowTripDetailsModal}
+            tripId={selectedTripId}
+            onEditTrip={openEditRouteDialog}
+          />
+        )}
       </div>
     </MainLayout>
   );

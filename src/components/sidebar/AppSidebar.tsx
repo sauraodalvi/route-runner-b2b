@@ -118,6 +118,14 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuSubButton asChild>
+                      <Link to="/collection-settings">
+                        <Settings className="h-5 w-5" />
+                        <span>B2B Collection Settings</span>
+                      </Link>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
                 </SidebarMenuSub>
               </SidebarMenuItem>
               <SidebarMenuItem>

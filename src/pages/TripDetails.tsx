@@ -458,7 +458,7 @@ const TripDetails = () => {
                   )}
                   {stop.type === 'checkout' && (
                     <Badge variant="outline" className="bg-gray-100">
-                      Checkout Point
+                      Drop-off Point
                     </Badge>
                   )}
                 </div>

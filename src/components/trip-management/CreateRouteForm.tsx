@@ -8,11 +8,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Plus, Upload, Map, FileSpreadsheet, ArrowUp, ArrowDown, Check, RefreshCw, X, Edit, Trash2, RotateCw, Undo2 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CalendarIcon, Plus, Map, ArrowUp, ArrowDown, Check, RefreshCw, X, Edit, Trash2, RotateCw, Undo2, Building, Sparkles, Info, ChevronDown } from "lucide-react";
 import { StopsList } from "./StopsList";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddStopForm } from "./AddStopForm";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -55,8 +55,7 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
   const [endAfterUnit, setEndAfterUnit] = useState("trips");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [pickupPartner, setPickupPartner] = useState("");
-  const [activeTab, setActiveTab] = useState("manual");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Removed bulk upload related state variables
   const [stopToEdit, setStopToEdit] = useState<Stop | null>(null);
   const [editMode, setEditMode] = useState("this");
   // Removed modal state variables
@@ -69,13 +68,25 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
 
   useEffect(() => {
     if (initialData) {
-      setRouteName(initialData.routeNo || "");
-      if (initialData.date) {
-        try {
-          setDate(parseISO(initialData.date));
-        } catch (error) {
-          console.error("Error parsing date:", error);
+      // If this is a copy operation (isCopy flag is set), don't set the name and date
+      if (!initialData.isCopy) {
+        setRouteName(initialData.routeNo || "");
+        if (initialData.date) {
+          try {
+            setDate(parseISO(initialData.date));
+          } catch (error) {
+            console.error("Error parsing date:", error);
+          }
         }
+      } else {
+        // For copy operations, clear the name and date
+        setRouteName("");
+        setDate(undefined);
+        // Show a toast message to remind the user to set a new name and date
+        toast({
+          title: "Copy Route",
+          description: "Please provide a new name and start date for this route copy.",
+        });
       }
 
       if (initialData.stopCount > 0) {
@@ -96,7 +107,12 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         setStops(dummyStops);
       }
 
-      setPickupPartner(initialData.assignedTeam ? "1" : "");
+      // For copy operations, don't set the pickup partner
+      if (!initialData.isCopy) {
+        setPickupPartner(initialData.assignedTeam ? "1" : "");
+      } else {
+        setPickupPartner("");
+      }
     }
   }, [initialData]);
 
@@ -207,7 +223,7 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         ? `${routeName} has been updated with ${stops.length} stops`
         : `${routeName} has been created with ${stops.length} stops`,
     });
-    setShowEditOptions(false);
+    // No longer using modal
     onCancel();
   };
 
@@ -218,73 +234,11 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         ? `${initialData?.id || 'Trip'} has been cancelled`
         : `All trips in route ${routeName} have been cancelled`,
     });
-    setShowCancelOptions(false);
+    // No longer using modal
     onCancel();
   };
 
-  const handleDownloadTemplate = () => {
-    const csvContent = "Stop Name,Address,Type,Time,Organization,Contact Name,Contact Phone\nExample Hospital,123 Main St,pickup,09:00 AM,1,John Doe,555-123-4567\nCheckpoint 1,456 Park Ave,checkpoint,10:00 AM,,Jane Smith,555-987-6543";
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'route_stops_template.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    toast({
-      title: "Template downloaded",
-      description: "CSV template has been downloaded to your device",
-    });
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
-      toast({
-        title: "Invalid file format",
-        description: "Please upload a CSV file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const mockStopsFromCsv = [
-      {
-        id: Date.now() + 1,
-        name: "Hospital A",
-        address: "123 Health St",
-        type: "pickup" as const,
-        time: "09:00 AM",
-        organization: "1",
-        contactName: "Dr. Smith",
-        contactPhone: "555-123-4567"
-      },
-      {
-        id: Date.now() + 2,
-        name: "Checkpoint B",
-        address: "456 Safety Rd",
-        type: "checkpoint" as const,
-        time: "10:30 AM",
-        contactName: "Security Team",
-        contactPhone: "555-987-6543"
-      }
-    ];
-
-    setStops([...stops, ...mockStopsFromCsv]);
-
-    toast({
-      title: "Stops imported successfully",
-      description: `${mockStopsFromCsv.length} stops have been added from the file`,
-    });
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
+  // Removed handleDownloadTemplate and handleFileUpload functions
 
   const handleOptimizeRoute = () => {
     if (!isOptimized) {
@@ -358,6 +312,10 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-medium">Route Details</h3>
+      </div>
+
       <div className="space-y-4">
         <div>
           <Label htmlFor="routeName">Route Name</Label>
@@ -487,131 +445,11 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
 
         <div>
           <Label className="mb-2 block">Add Stops to Route</Label>
-          <Tabs defaultValue="manual" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="manual">Add Manually</TabsTrigger>
-              <TabsTrigger value="bulk">Bulk Upload</TabsTrigger>
-            </TabsList>
-            <TabsContent value="manual" className="pt-4">
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-sm font-medium">Stops ({stops.length})</span>
-                <div className="flex space-x-2">
-                  {stops.length >= 2 && (
-                    <>
-                      {isOptimized ? (
-                        <Button size="sm" variant="outline" onClick={handleRevertToOriginal}>
-                          <Undo2 className="mr-2 h-4 w-4" />
-                          Revert to Original Order
-                        </Button>
-                      ) : (
-                        <Button size="sm" variant="outline" onClick={handleOptimizeRoute}>
-                          <RotateCw className="mr-2 h-4 w-4" />
-                          Optimize Route
-                        </Button>
-                      )}
-                    </>
-                  )}
-                  <Button size="sm" variant="outline" onClick={() => {
-                    setStopToEdit(null);
-                    setShowAddStopDialog(true);
-                  }}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Stop
-                  </Button>
-                </div>
-              </div>
-              <div className="overflow-y-auto max-h-[300px] border rounded-md">
-                {stops.length === 0 ? (
-                  <div className="p-6 text-center text-muted-foreground">
-                    No stops added yet. Click "Add Stop" to get started.
-                  </div>
-                ) : (
-                  <ul className="divide-y">
-                    {stops.map((stop, index) => (
-                      <li key={stop.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
-                        <div className="flex items-center">
-                          <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full mr-3 text-sm">
-                            {index + 1}
-                          </span>
-                          <div>
-                            <p className="font-medium">{stop.name}</p>
-                            <p className="text-sm text-muted-foreground truncate max-w-xs">
-                              {stop.address}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={index === 0}
-                            onClick={() => handleMoveStop(stop.id, 'up')}
-                            className="h-8 w-8"
-                          >
-                            <ArrowUp className="h-4 w-4" />
-                            <span className="sr-only">Move Up</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={index === stops.length - 1}
-                            onClick={() => handleMoveStop(stop.id, 'down')}
-                            className="h-8 w-8"
-                          >
-                            <ArrowDown className="h-4 w-4" />
-                            <span className="sr-only">Move Down</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditStop(stop)}
-                            className="h-8 w-8"
-                          >
-                            <Edit className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteStop(stop.id)}
-                            className="h-8 w-8 text-destructive"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </Button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </TabsContent>
-            <TabsContent value="bulk" className="pt-4">
-              <div className="text-center p-8 border-2 border-dashed rounded-lg">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  accept=".csv"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-                <Upload
-                  className="h-8 w-8 mx-auto mb-2 text-muted-foreground cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                />
-                <p className="text-sm font-medium cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                  Drop CSV file here or click to upload
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Download template and fill with stop details
-                </p>
-                <Button variant="outline" size="sm" className="mt-4" onClick={handleDownloadTemplate}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Download Template
-                </Button>
-              </div>
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm font-medium">Stops ({stops.length})</span>
+            <div className="flex space-x-2">
               {stops.length >= 2 && (
-                <div className="mt-4 mb-4 flex justify-end">
+                <>
                   {isOptimized ? (
                     <Button size="sm" variant="outline" onClick={handleRevertToOriginal}>
                       <Undo2 className="mr-2 h-4 w-4" />
@@ -623,139 +461,157 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
                       Optimize Route
                     </Button>
                   )}
-                </div>
+                </>
               )}
-              {stops.length > 0 && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Stops ({stops.length})</span>
-                  </div>
-                  <div className="overflow-y-auto max-h-[300px] border rounded-md">
-                    <ul className="divide-y">
-                      {stops.map((stop, index) => (
-                        <li key={stop.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
-                          <div className="flex items-center">
-                            <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full mr-3 text-sm">
-                              {index + 1}
-                            </span>
-                            <div>
-                              <p className="font-medium">{stop.name}</p>
-                              <p className="text-sm text-muted-foreground truncate max-w-xs">
-                                {stop.address}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={index === 0}
-                              onClick={() => handleMoveStop(stop.id, 'up')}
-                              className="h-8 w-8"
-                            >
-                              <ArrowUp className="h-4 w-4" />
-                              <span className="sr-only">Move Up</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              disabled={index === stops.length - 1}
-                              onClick={() => handleMoveStop(stop.id, 'down')}
-                              className="h-8 w-8"
-                            >
-                              <ArrowDown className="h-4 w-4" />
-                              <span className="sr-only">Move Down</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditStop(stop)}
-                              className="h-8 w-8"
-                            >
-                              <Edit className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteStop(stop.id)}
-                              className="h-8 w-8 text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-        <div className="h-56 bg-muted rounded-lg flex items-center justify-center mt-4">
-          <div className="text-center">
-            <Map className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Map view will display stops here</p>
-            {stops.length > 0 && (
-              <span className="text-xs block mt-1">
-                {stops.length} {stops.length === 1 ? 'stop' : 'stops'} added
-              </span>
+              <Button size="sm" variant="outline" onClick={() => {
+                setStopToEdit(null);
+                setShowAddStopDialog(true);
+              }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Stop
+              </Button>
+            </div>
+          </div>
+          <div className="overflow-y-auto max-h-[300px] border rounded-md">
+            {stops.length === 0 ? (
+              <div className="p-6 text-center text-muted-foreground">
+                No stops added yet. Click "Add Stop" to get started.
+              </div>
+            ) : (
+              <ul className="divide-y">
+                {stops.map((stop, index) => (
+                  <li key={stop.id} className="p-3 hover:bg-gray-50 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <span className="w-7 h-7 flex items-center justify-center bg-gray-100 rounded-full mr-3 text-sm">
+                        {index + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium">{stop.name}</p>
+                        <p className="text-sm text-muted-foreground truncate max-w-xs">
+                          {stop.address}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={index === 0}
+                        onClick={() => handleMoveStop(stop.id, 'up')}
+                        className="h-8 w-8"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                        <span className="sr-only">Move Up</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={index === stops.length - 1}
+                        onClick={() => handleMoveStop(stop.id, 'down')}
+                        className="h-8 w-8"
+                      >
+                        <ArrowDown className="h-4 w-4" />
+                        <span className="sr-only">Move Down</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditStop(stop)}
+                        className="h-8 w-8"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span className="sr-only">Edit</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteStop(stop.id)}
+                        className="h-8 w-8 text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
+
+        </div>
+        {/* Map view removed */}
+        <div className="mt-4 text-center">
+          {stops.length > 0 && (
+            <span className="text-sm text-muted-foreground">
+              {stops.length} {stops.length === 1 ? 'stop' : 'stops'} added
+            </span>
+          )}
         </div>
       </div>
 
       {initialData ? (
         <div className="border-t pt-4 space-y-4">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium mb-2">Apply Changes</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  className="w-full"
-                  onClick={() => {
-                    setEditMode("this");
-                    handleSaveEdit();
-                  }}
-                >
-                  <Check className="mr-2 h-4 w-4" />
-                  Apply to Current Trip
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => {
-                    setEditMode("all");
-                    handleSaveEdit();
-                  }}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Apply to All Trips
-                </Button>
-              </div>
+          <div className="flex flex-col sm:flex-row justify-between gap-4 pt-4">
+            <div className="flex gap-2">
+              <Button
+                size="lg"
+                className="font-medium"
+                onClick={() => {
+                  setEditMode("this");
+                  handleSaveEdit();
+                }}
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Apply to Current Trip
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-10 w-10">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setEditMode("all");
+                      handleSaveEdit();
+                    }}
+                  >
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Apply to All Trips
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            <div>
-              <h3 className="text-sm font-medium mb-2">Cancel Trip</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleCancelTrip('this')}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel Current Trip
-                </Button>
-                <Button
-                  className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  onClick={() => handleCancelTrip('all')}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel All Trips
-                </Button>
-              </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="lg"
+                className="font-medium text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => handleCancelTrip('this')}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Cancel Current Trip
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-10 w-10 border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onClick={() => handleCancelTrip('all')}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Cancel All Trips
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -780,6 +636,12 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         <DialogContent className="sm:max-w-xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{stopToEdit ? 'Edit Stop' : 'Add Stop to Route'}</DialogTitle>
+            <div className="text-sm text-muted-foreground mt-1">
+              <p className="flex items-start">
+                <Info className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                Edited address won't be saved against the organization
+              </p>
+            </div>
           </DialogHeader>
           <AddStopForm
             initialData={stopToEdit}
@@ -792,7 +654,7 @@ export function CreateRouteForm({ onCancel, initialData }: CreateRouteFormProps)
         </DialogContent>
       </Dialog>
 
-      {/* Modals removed - now using inline buttons */}
+      {/* Simplified Route Flow Dialog removed */}
     </div>
   );
 }

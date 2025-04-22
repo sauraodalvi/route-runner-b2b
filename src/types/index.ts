@@ -7,7 +7,7 @@ export interface Route {
   date: string;
   startTime: string;
   endTime?: string;
-  status: "active" | "upcoming" | "completed" | string;
+  status: "active" | "upcoming" | "completed" | "pending" | "cancelled" | string;
   assignedTeam: string;
   stopCount: number;
   samplesCollected: number;

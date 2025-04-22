@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Download, Calendar as CalendarIcon, Filter } from "lucide-react";
+import { Plus, Download, Calendar as CalendarIcon, Filter, Loader2 } from "lucide-react";
 import { CreateRouteForm } from "@/components/trip-management/CreateRouteForm";
 import { RoutesList } from "@/components/trip-management/RoutesList";
 import { Input } from "@/components/ui/input";
@@ -21,11 +21,12 @@ import { format, addDays } from "date-fns";
 import { Route } from "@/types";
 import { DateRange } from "react-day-picker";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-// import { useNavigate } from "react-router-dom"; // Not needed after removing map view
 import { Calendar } from "@/components/ui/calendar";
 import { sampleRoutes } from "@/data/sampleRoutes";
 import { StopWiseView } from "@/components/trip-management/StopWiseView";
 import { TripDetailsModal } from "@/components/trip-management/TripDetailsModal";
+import { testSupabaseConnection, checkRequiredTables } from "@/utils/supabase-check";
+import { getRoutes } from "@/services/api";
 // Map view removed
 
 // Use sample data from our data file
@@ -137,19 +138,117 @@ const TripManagement = () => {
   const [viewMode, setViewMode] = useState("trip-wise");
   const [showTripDetailsModal, setShowTripDetailsModal] = useState(false);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Log routes when they change
+  // State to track when to refresh routes
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Function to trigger a refresh of routes
+  const refreshRoutes = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
+  // Test Supabase connection and fetch routes
   useEffect(() => {
-    console.log('Routes initialized:', routes);
-    console.log('Sample routes:', sampleRoutes);
-  }, [routes]);
+    const initializeSupabase = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Test connection to Supabase
+        const { success, error: connectionError } = await testSupabaseConnection();
+
+        if (!success) {
+          console.error('Failed to connect to Supabase:', connectionError);
+
+          // Create a more detailed error message
+          let errorMessage = 'Could not connect to Supabase. Using sample data instead.';
+          if (connectionError) {
+            errorMessage += ' Error: ' + (connectionError.message || JSON.stringify(connectionError));
+          }
+
+          setError(errorMessage);
+          toast({
+            title: "Connection Error",
+            description: errorMessage,
+            variant: "destructive"
+          });
+          setRoutes(mockRoutes);
+          setLoading(false);
+          return;
+        }
+
+        // Successfully connected to Supabase
+
+        // Check if required tables exist
+        const { allTablesExist, missingTables } = await checkRequiredTables();
+
+        if (!allTablesExist) {
+          console.error('Missing required tables:', missingTables);
+          setError(`Missing required tables: ${missingTables.join(', ')}. Using sample data instead.`);
+          toast({
+            title: "Missing Tables",
+            description: `Missing required tables: ${missingTables.join(', ')}. Using sample data instead.`,
+            variant: "destructive"
+          });
+          setRoutes(mockRoutes);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch routes from Supabase
+        const { data, error: routesError } = await getRoutes();
+
+        if (routesError) {
+          console.error('Error fetching routes:', routesError);
+          setError('Error fetching routes. Using sample data instead.');
+          toast({
+            title: "Data Error",
+            description: "Error fetching routes. Using sample data instead.",
+            variant: "destructive"
+          });
+          setRoutes(mockRoutes);
+        } else if (data && data.length > 0) {
+          console.log('Routes fetched from Supabase:', data);
+          setRoutes(data);
+          toast({
+            title: "Connected to Supabase",
+            description: `Successfully loaded ${data.length} routes from Supabase.`,
+          });
+        } else {
+          console.log('No routes found in Supabase. Using sample data.');
+          setRoutes(mockRoutes);
+          toast({
+            title: "No Data",
+            description: "No routes found in Supabase. Using sample data instead.",
+          });
+        }
+      } catch (err) {
+        console.error('Error initializing Supabase:', err);
+        setError('Error initializing Supabase. Using sample data instead.');
+        toast({
+          title: "Initialization Error",
+          description: "Error initializing Supabase. Using sample data instead.",
+          variant: "destructive"
+        });
+        setRoutes(mockRoutes);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeSupabase();
+  }, [refreshTrigger]); // Add refreshTrigger as a dependency to reload when it changes
 
   const filterRoutes = (query: string) => {
     setSearchQuery(query);
-    toast({
-      title: "Search applied",
-      description: `Showing results for "${query}"`,
-    });
+    if (query.trim() !== '') {
+      toast({
+        title: "Search applied",
+        description: `Showing results for "${query}"`,
+      });
+    }
   };
 
   const handleExport = () => {
@@ -324,12 +423,39 @@ const TripManagement = () => {
     }
 
     // Special handling for cancelled tab - we'll show all routes but filter for cancelled stops in StopWiseView
-    if (tabStatus === 'cancelled') {
+    if (tabStatus === 'cancelled' && viewMode === 'stop-wise') {
       return routes;
     }
 
-    const filteredRoutes = routes.filter(route => route.status === tabStatus);
-    return filteredRoutes;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Set to beginning of day for date comparison
+
+    return routes.filter(route => {
+      const routeDate = new Date(route.date);
+      routeDate.setHours(0, 0, 0, 0); // Set to beginning of day for date comparison
+
+      switch (tabStatus) {
+        case 'upcoming':
+          // All future trips (dates after today)
+          return routeDate > today;
+        case 'pending':
+          // Historic trips up to today that are not completed or cancelled
+          return routeDate <= today && route.status !== 'completed' && route.status !== 'cancelled';
+        case 'active':
+          // Current trips that are in progress
+          return route.status === 'active' ||
+                 (routeDate.getTime() === today.getTime() && route.status !== 'cancelled' &&
+                  route.status !== 'completed');
+        case 'completed':
+          // Completed trips
+          return route.status === 'completed';
+        case 'cancelled':
+          // Cancelled trips
+          return route.status === 'cancelled';
+        default:
+          return route.status === tabStatus;
+      }
+    });
   };
 
   return (
@@ -422,11 +548,10 @@ const TripManagement = () => {
             <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
               <TabsList>
                 <TabsTrigger value="active">{viewMode === "stop-wise" ? "Active Stops" : "Active Trips"}</TabsTrigger>
+                <TabsTrigger value="pending">{viewMode === "stop-wise" ? "Pending Stops" : "Pending Trips"}</TabsTrigger>
                 <TabsTrigger value="upcoming">{viewMode === "stop-wise" ? "Upcoming Stops" : "Upcoming Trips"}</TabsTrigger>
                 <TabsTrigger value="completed">{viewMode === "stop-wise" ? "Completed Stops" : "Completed Trips"}</TabsTrigger>
-                {viewMode === "stop-wise" && (
-                  <TabsTrigger value="cancelled">Cancelled Stops</TabsTrigger>
-                )}
+                <TabsTrigger value="cancelled">{viewMode === "stop-wise" ? "Cancelled Stops" : "Cancelled Trips"}</TabsTrigger>
                 <TabsTrigger value="all">{viewMode === "stop-wise" ? "All Stops" : "All Trips"}</TabsTrigger>
                 {viewMode === "stop-wise" && (
                   <DropdownMenu>
@@ -482,21 +607,35 @@ const TripManagement = () => {
           </div>
         </div>
 
+        {/* Connection Status - Removed */}
+
         {/* View Content */}
         <Tabs defaultValue="trip-wise" value={viewMode} className="mt-4">
           {/* Trip Wise View */}
           <TabsContent value="trip-wise" className="space-y-4">
             <Card>
               <CardContent className="p-0">
-                <RoutesList
-                  routes={getRoutesForTab(activeTab)}
-                  status={activeTab}
-                  searchQuery={searchQuery}
-                  dateRange={date}
-                  onEditRoute={openEditRouteDialog}
-                  onViewDetails={viewTripDetails}
-                  onCopyRoute={openCopyRouteDialog}
-                />
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2">Loading routes from Supabase...</span>
+                  </div>
+                ) : error ? (
+                  <div className="p-4 text-center">
+                    <p className="text-destructive">{error}</p>
+                    <p className="text-muted-foreground">Showing sample data instead.</p>
+                  </div>
+                ) : (
+                  <RoutesList
+                    routes={getRoutesForTab(activeTab)}
+                    status={activeTab}
+                    searchQuery={searchQuery}
+                    dateRange={date}
+                    onEditRoute={openEditRouteDialog}
+                    onViewDetails={viewTripDetails}
+                    onCopyRoute={openCopyRouteDialog}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -505,17 +644,29 @@ const TripManagement = () => {
           <TabsContent value="stop-wise" className="space-y-4">
             <Card>
               <CardContent className="p-0">
-                <StopWiseView
-                  routes={getRoutesForTab(activeTab)}
-                  status={activeTab}
-                  searchQuery={searchQuery}
-                  dateRange={date}
-                  onViewTripDetails={viewTripDetails}
-                  onEditRoute={openEditRouteDialog}
-                  onCopyRoute={openCopyRouteDialog}
-                  showPickupPoints={showPickupPoints}
-                  showCheckpoints={showDropoffPoints}
-                />
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="ml-2">Loading routes from Supabase...</span>
+                  </div>
+                ) : error ? (
+                  <div className="p-4 text-center">
+                    <p className="text-destructive">{error}</p>
+                    <p className="text-muted-foreground">Showing sample data instead.</p>
+                  </div>
+                ) : (
+                  <StopWiseView
+                    routes={getRoutesForTab(activeTab)}
+                    status={activeTab}
+                    searchQuery={searchQuery}
+                    dateRange={date}
+                    onViewTripDetails={viewTripDetails}
+                    onEditRoute={openEditRouteDialog}
+                    onCopyRoute={openCopyRouteDialog}
+                    showPickupPoints={showPickupPoints}
+                    showCheckpoints={showDropoffPoints}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -531,7 +682,10 @@ const TripManagement = () => {
               </DialogTitle>
             </DialogHeader>
             <CreateRouteForm
-              onCancel={() => setShowCreateRouteDialog(false)}
+              onCancel={() => {
+                setShowCreateRouteDialog(false);
+                refreshRoutes(); // Refresh routes after closing the dialog
+              }}
               initialData={routeToEdit}
             />
           </DialogContent>
@@ -541,7 +695,12 @@ const TripManagement = () => {
         {selectedTripId && (
           <TripDetailsModal
             open={showTripDetailsModal}
-            onOpenChange={setShowTripDetailsModal}
+            onOpenChange={(open) => {
+              setShowTripDetailsModal(open);
+              if (!open) {
+                refreshRoutes(); // Refresh routes when modal is closed
+              }
+            }}
             tripId={selectedTripId}
             onEditTrip={openEditRouteDialog}
           />

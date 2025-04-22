@@ -959,6 +959,8 @@ const getBadgeVariant = (status: string): "default" | "destructive" | "outline" 
       return 'destructive';
     case 'upcoming':
       return 'secondary';
+    case 'pending':
+      return 'outline';
     default:
       return 'outline';
   }

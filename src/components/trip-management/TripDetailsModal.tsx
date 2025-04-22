@@ -718,7 +718,12 @@ export function TripDetailsModal({ tripId, open, onOpenChange, onEditTrip }: Tri
                               <Clock className="h-3 w-3 mr-1" /> Active
                             </Badge>
                           )}
-                          {(stop.status === "pending" || stop.status === "upcoming" || !stop.status) && (
+                          {stop.status === "pending" && (
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                              <AlertCircle className="h-3 w-3 mr-1" /> Pending
+                            </Badge>
+                          )}
+                          {(stop.status === "upcoming" || !stop.status) && (
                             <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
                               <AlertCircle className="h-3 w-3 mr-1" /> Upcoming
                             </Badge>
@@ -1119,6 +1124,8 @@ const getBadgeVariant = (status: string): "default" | "destructive" | "outline" 
       return 'destructive';
     case 'upcoming':
       return 'secondary';
+    case 'pending':
+      return 'outline';
     default:
       return 'outline';
   }

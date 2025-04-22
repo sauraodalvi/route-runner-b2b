@@ -58,10 +58,25 @@ export const RoutesList = ({
   const routesToFilter = routes || [];
 
   const filteredRoutes = routesToFilter.filter((route) => {
-    const searchRegex = new RegExp(searchQuery, "i");
-    const matchesSearch =
-      searchRegex.test(route.tripId) || searchRegex.test(route.name);
+    // Search functionality - case insensitive search for route name or trip ID
+    let matchesSearch = true;
+    if (searchQuery.trim() !== '') {
+      // First try exact match for trip ID (case insensitive)
+      if (route.tripId && route.tripId.toLowerCase() === searchQuery.toLowerCase()) {
+        return true;
+      }
 
+      // Then try partial matches with individual terms
+      const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term.length > 0);
+      matchesSearch = searchTerms.some(term => {
+        return (
+          (route.tripId && route.tripId.toLowerCase().includes(term)) ||
+          (route.name && route.name.toLowerCase().includes(term))
+        );
+      });
+    }
+
+    // Date range filtering
     const routeDate = new Date(route.date);
     const startDate = dateRange?.from;
     const endDate = dateRange?.to;
@@ -159,7 +174,15 @@ export const RoutesList = ({
                     <TableCell>{route.name}</TableCell>
                     <TableCell>{route.startTime}</TableCell>
                     <TableCell>
-                      <Badge>{route.status}</Badge>
+                      <Badge
+                        className={`capitalize ${route.status === 'active' ? 'bg-blue-500 hover:bg-blue-600' :
+                                   route.status === 'pending' ? 'bg-purple-500 hover:bg-purple-600' :
+                                   route.status === 'upcoming' ? 'bg-amber-500 hover:bg-amber-600' :
+                                   route.status === 'completed' ? 'bg-green-500 hover:bg-green-600' :
+                                   route.status === 'cancelled' ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                      >
+                        {route.status}
+                      </Badge>
                     </TableCell>
                     <TableCell>{route.assignedTeam}</TableCell>
                     <TableCell className="text-center">{route.stopCount}</TableCell>

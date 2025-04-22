@@ -158,11 +158,25 @@ export const StopWiseView = ({
 
     // Filter routes based on search query, status, and date range
     const filteredRoutes = routes.filter((route) => {
-      const matchesSearch =
-        searchQuery === "" ||
-        route.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        route.tripId.toLowerCase().includes(searchQuery.toLowerCase());
+      // Search functionality - case insensitive search for route name or trip ID
+      let matchesSearch = true;
+      if (searchQuery.trim() !== '') {
+        // First try exact match for trip ID (case insensitive)
+        if (route.tripId && route.tripId.toLowerCase() === searchQuery.toLowerCase()) {
+          return true;
+        }
 
+        // Then try partial matches with individual terms
+        const searchTerms = searchQuery.toLowerCase().split(' ').filter(term => term.length > 0);
+        matchesSearch = searchTerms.some(term => {
+          return (
+            (route.tripId && route.tripId.toLowerCase().includes(term)) ||
+            (route.name && route.name.toLowerCase().includes(term))
+          );
+        });
+      }
+
+      // Date range filtering
       let matchesDateRange = true;
       if (dateRange?.from && dateRange?.to) {
         const routeDate = parseISO(route.date);
@@ -306,28 +320,33 @@ export const StopWiseView = ({
                     </TableCell>
                     <TableCell>
                       {stop.status === "completed" && (
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge className="bg-green-500 hover:bg-green-600">
                           <CheckCircle className="h-3 w-3 mr-1" /> Completed
                         </Badge>
                       )}
                       {stop.status === "in-progress" && (
-                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                        <Badge className="bg-blue-500 hover:bg-blue-600">
                           <Clock className="h-3 w-3 mr-1" /> Active
                         </Badge>
                       )}
-                      {(stop.status === "pending" || stop.status === "upcoming" || !stop.status) && (
-                        <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">
+                      {stop.status === "pending" && (
+                        <Badge className="bg-purple-500 hover:bg-purple-600">
+                          <AlertCircle className="h-3 w-3 mr-1" /> Pending
+                        </Badge>
+                      )}
+                      {(stop.status === "upcoming" || !stop.status) && (
+                        <Badge className="bg-amber-500 hover:bg-amber-600">
                           <AlertCircle className="h-3 w-3 mr-1" /> Upcoming
                         </Badge>
                       )}
                       {stop.status === "cancelled" && (
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <Badge className="bg-red-500 hover:bg-red-600">
                           <XCircle className="h-3 w-3 mr-1" /> Cancelled
                         </Badge>
                       )}
                       {stop.status === "active" && (
-                        <Badge variant="default">
-                          Active
+                        <Badge className="bg-blue-500 hover:bg-blue-600">
+                          <Clock className="h-3 w-3 mr-1" /> Active
                         </Badge>
                       )}
                     </TableCell>

@@ -31,7 +31,8 @@ import {
   ClipboardList,
   List,
   Activity,
-  HelpCircle
+  HelpCircle,
+  Database
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -126,6 +127,7 @@ export function AppSidebar() {
                       </Link>
                     </SidebarMenuSubButton>
                   </SidebarMenuSubItem>
+
                 </SidebarMenuSub>
               </SidebarMenuItem>
               <SidebarMenuItem>

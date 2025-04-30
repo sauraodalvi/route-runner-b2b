@@ -374,11 +374,51 @@ const TripManagement = () => {
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDate(range);
-    if (range?.from && range?.to) {
+    try {
+      console.log("Date range changed:", range);
+
+      // Close the date picker popover first
+      setShowDateRangePicker(false);
+
+      // Then update the date state
+      setDate(range);
+
+      // Show toast notification
+      if (range?.from && range?.to) {
+        toast({
+          title: "Date Range Applied",
+          description: `Showing trips from ${format(range.from, "MMM d, yyyy")} to ${format(range.to, "MMM d, yyyy")}`,
+        });
+      } else if (range?.from) {
+        toast({
+          title: "Date Range Applied",
+          description: `Showing trips from ${format(range.from, "MMM d, yyyy")}`,
+        });
+      } else if (range?.to) {
+        toast({
+          title: "Date Range Applied",
+          description: `Showing trips until ${format(range.to, "MMM d, yyyy")}`,
+        });
+      } else {
+        toast({
+          title: "Date Range Cleared",
+          description: "Showing all trips regardless of date",
+        });
+      }
+
+      // Force a re-render to ensure the date filter is applied
+      // Use a small delay to ensure state updates have completed
+      setTimeout(() => {
+        setRefreshTrigger(prev => prev + 1);
+      }, 100);
+    } catch (error) {
+      console.error("Error applying date range:", error);
+      // If there's an error, clear the date range and show an error toast
+      setDate(undefined);
       toast({
-        title: "Date Range Applied",
-        description: `Showing trips from ${format(range.from, "MMM d, yyyy")} to ${format(range.to, "MMM d, yyyy")}`,
+        title: "Error",
+        description: "There was an error applying the date range. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -416,46 +456,124 @@ const TripManagement = () => {
 
   // Map view toggle removed
 
-  // Filter routes based on active tab
+  // Filter routes based on active tab and date range
   const getRoutesForTab = (tabStatus: string) => {
-    if (tabStatus === 'all') {
-      return routes;
-    }
-
-    // Special handling for cancelled tab - we'll show all routes but filter for cancelled stops in StopWiseView
-    if (tabStatus === 'cancelled' && viewMode === 'stop-wise') {
-      return routes;
-    }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to beginning of day for date comparison
-
-    return routes.filter(route => {
-      const routeDate = new Date(route.date);
-      routeDate.setHours(0, 0, 0, 0); // Set to beginning of day for date comparison
-
-      switch (tabStatus) {
-        case 'upcoming':
-          // All future trips (dates after today)
-          return routeDate > today;
-        case 'pending':
-          // Historic trips up to today that are not completed or cancelled
-          return routeDate <= today && route.status !== 'completed' && route.status !== 'cancelled';
-        case 'active':
-          // Current trips that are in progress
-          return route.status === 'active' ||
-                 (routeDate.getTime() === today.getTime() && route.status !== 'cancelled' &&
-                  route.status !== 'completed');
-        case 'completed':
-          // Completed trips
-          return route.status === 'completed';
-        case 'cancelled':
-          // Cancelled trips
-          return route.status === 'cancelled';
-        default:
-          return route.status === tabStatus;
+    try {
+      // Safety check - if routes is undefined or empty, return empty array
+      if (!routes || routes.length === 0) {
+        console.log("No routes available");
+        return [];
       }
-    });
+
+      // Create a copy of routes to avoid mutation issues
+      let filteredRoutes = [...routes];
+
+      // First apply status filtering
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to beginning of day for comparison
+
+      // Skip status filtering for 'all' tab or special case for cancelled in stop-wise view
+      if (tabStatus !== 'all' && !(tabStatus === 'cancelled' && viewMode === 'stop-wise')) {
+        filteredRoutes = filteredRoutes.filter(route => {
+          try {
+            // Safety check for route and date
+            if (!route || !route.date) return false;
+
+            const routeDate = new Date(route.date);
+
+            // Skip routes with invalid dates
+            if (isNaN(routeDate.getTime())) {
+              return false;
+            }
+
+            routeDate.setHours(0, 0, 0, 0); // Set to beginning of day for comparison
+
+            switch (tabStatus) {
+              case 'upcoming':
+                // All future trips (dates after today)
+                return routeDate > today && route.status !== 'cancelled' && route.status !== 'completed';
+              case 'pending':
+                // Historic trips up to today that are not completed, cancelled, or active
+                return routeDate <= today &&
+                       route.status !== 'completed' &&
+                       route.status !== 'cancelled' &&
+                       route.status !== 'active' &&
+                       route.status !== 'upcoming';
+              case 'active':
+                // Current trips that are in progress
+                return route.status === 'active' ||
+                      (routeDate.getTime() === today.getTime() && route.status !== 'cancelled' &&
+                        route.status !== 'completed' && route.status !== 'pending' && route.status !== 'upcoming');
+              case 'completed':
+                // Completed trips
+                return route.status === 'completed';
+              case 'cancelled':
+                // Cancelled trips
+                return route.status === 'cancelled';
+              default:
+                return route.status === tabStatus;
+            }
+          } catch (error) {
+            return false;
+          }
+        });
+      }
+
+      // Then apply date range filtering if a date range is selected
+      if (date?.from || date?.to) {
+        filteredRoutes = filteredRoutes.filter(route => {
+          try {
+            // Safety check for route and date
+            if (!route || !route.date) return false;
+
+            // Parse the route date
+            const routeDate = new Date(route.date);
+
+            // Skip routes with invalid dates
+            if (isNaN(routeDate.getTime())) {
+              return false;
+            }
+
+            // Normalize dates for comparison (set to beginning of day)
+            const routeDateNormalized = new Date(routeDate);
+            routeDateNormalized.setHours(0, 0, 0, 0);
+
+            const fromDateNormalized = date?.from ? new Date(date.from) : null;
+            const toDateNormalized = date?.to ? new Date(date.to) : null;
+
+            if (fromDateNormalized) fromDateNormalized.setHours(0, 0, 0, 0);
+            if (toDateNormalized) toDateNormalized.setHours(23, 59, 59, 999); // End of day for to date
+
+            // Check if route date is within the selected range
+            const isInRange = (!fromDateNormalized || routeDateNormalized >= fromDateNormalized) &&
+                              (!toDateNormalized || routeDateNormalized <= toDateNormalized);
+
+            return isInRange;
+          } catch (error) {
+            return false;
+          }
+        });
+      }
+
+      // For stop-wise view, log information about routes with stops
+      if (viewMode === 'stop-wise') {
+        // Check if any routes have stops
+        const routesWithStops = filteredRoutes.filter(route => route.stops && route.stops.length > 0);
+
+        // Log information about routes and stops
+        console.log(`Stop-wise view: ${filteredRoutes.length} routes total, ${routesWithStops.length} routes have stops`);
+
+        if (routesWithStops.length === 0 && filteredRoutes.length > 0) {
+          console.log(`Found ${filteredRoutes.length} routes but none have stops - StopWiseView will show dummy data`);
+        }
+      }
+
+      return filteredRoutes;
+    } catch (error) {
+      // If there's an error, return an empty array
+      console.error("Error in getRoutesForTab:", error);
+      return [];
+    }
   };
 
   return (
@@ -535,7 +653,16 @@ const TripManagement = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           {/* View Mode Tabs */}
           <div>
-            <Tabs defaultValue="trip-wise" value={viewMode} onValueChange={setViewMode}>
+            <Tabs
+              defaultValue="trip-wise"
+              value={viewMode}
+              onValueChange={(newValue) => {
+                // When switching views, ensure we're using the same routes
+                setViewMode(newValue);
+                // Force a re-render to ensure the date filter is applied
+                setRefreshTrigger(prev => prev + 1);
+              }}
+            >
               <TabsList className="grid w-full max-w-md grid-cols-2">
                 <TabsTrigger value="trip-wise">Trip wise</TabsTrigger>
                 <TabsTrigger value="stop-wise">Stop wise</TabsTrigger>
@@ -544,8 +671,16 @@ const TripManagement = () => {
           </div>
 
           {/* Trip Status Tabs */}
-          <div>
-            <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
+          <div className="flex items-center">
+            <Tabs
+              defaultValue="active"
+              value={activeTab}
+              onValueChange={(newValue) => {
+                setActiveTab(newValue);
+                // Force a re-render to ensure the status filter is applied
+                setRefreshTrigger(prev => prev + 1);
+              }}
+            >
               <TabsList>
                 <TabsTrigger value="active">{viewMode === "stop-wise" ? "Active Stops" : "Active Trips"}</TabsTrigger>
                 <TabsTrigger value="pending">{viewMode === "stop-wise" ? "Pending Stops" : "Pending Trips"}</TabsTrigger>
@@ -553,57 +688,63 @@ const TripManagement = () => {
                 <TabsTrigger value="completed">{viewMode === "stop-wise" ? "Completed Stops" : "Completed Trips"}</TabsTrigger>
                 <TabsTrigger value="cancelled">{viewMode === "stop-wise" ? "Cancelled Stops" : "Cancelled Trips"}</TabsTrigger>
                 <TabsTrigger value="all">{viewMode === "stop-wise" ? "All Stops" : "All Trips"}</TabsTrigger>
-                {viewMode === "stop-wise" && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2 relative">
-                        <Filter className="h-4 w-4" />
-                        {(!showPickupPoints || !showDropoffPoints) && (
-                          <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
-                            {!showPickupPoints && !showDropoffPoints ? "!" : ""}
-                          </Badge>
-                        )}
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <div className="p-2">
-                        <h4 className="mb-2 text-sm font-medium">Stop Types</h4>
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="show-pickup"
-                              checked={showPickupPoints}
-                              onCheckedChange={(checked) => {
-                                if (typeof checked === 'boolean') {
-                                  setShowPickupPoints(checked);
-                                }
-                              }}
-                            />
-                            <Label htmlFor="show-pickup" className="text-sm font-normal">
-                              Pickup Points
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
-                              id="show-dropoff"
-                              checked={showDropoffPoints}
-                              onCheckedChange={(checked) => {
-                                if (typeof checked === 'boolean') {
-                                  setShowDropoffPoints(checked);
-                                }
-                              }}
-                            />
-                            <Label htmlFor="show-dropoff" className="text-sm font-normal">
-                              Drop-off Points
-                            </Label>
-                          </div>
-                        </div>
-                      </div>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
               </TabsList>
             </Tabs>
+
+            {/* Pickup/Dropoff Filter - Only visible in stop-wise view */}
+            {viewMode === "stop-wise" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 ml-2 relative">
+                    <Filter className="h-4 w-4" />
+                    {(!showPickupPoints || !showDropoffPoints) && (
+                      <Badge variant="secondary" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                        {!showPickupPoints && !showDropoffPoints ? "!" : ""}
+                      </Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="p-2">
+                    <h4 className="mb-2 text-sm font-medium">Stop Types</h4>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="show-pickup"
+                          checked={showPickupPoints}
+                          onCheckedChange={(checked) => {
+                            if (typeof checked === 'boolean') {
+                              setShowPickupPoints(checked);
+                              // Force a re-render to ensure the filter is applied
+                              setRefreshTrigger(prev => prev + 1);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="show-pickup" className="text-sm font-normal">
+                          Pickup Points
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="show-dropoff"
+                          checked={showDropoffPoints}
+                          onCheckedChange={(checked) => {
+                            if (typeof checked === 'boolean') {
+                              setShowDropoffPoints(checked);
+                              // Force a re-render to ensure the filter is applied
+                              setRefreshTrigger(prev => prev + 1);
+                            }
+                          }}
+                        />
+                        <Label htmlFor="show-dropoff" className="text-sm font-normal">
+                          Drop-off Points
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 
@@ -656,7 +797,35 @@ const TripManagement = () => {
                   </div>
                 ) : (
                   <StopWiseView
-                    routes={getRoutesForTab(activeTab)}
+                    routes={(() => {
+                      // Get the same routes that are shown in trip-wise view
+                      const routesForTab = getRoutesForTab(activeTab);
+
+                      console.log(`TripManagement: Passing ${routesForTab.length} routes to StopWiseView with date range:`,
+                        date ? {
+                          from: date.from ? date.from.toISOString().split('T')[0] : 'none',
+                          to: date.to ? date.to.toISOString().split('T')[0] : 'none'
+                        } : 'none'
+                      );
+
+                      // Check if routes have stops
+                      let routesWithStops = 0;
+                      let totalStops = 0;
+
+                      // Log each route to help debug
+                      routesForTab.forEach((route, index) => {
+                        console.log(`Route ${index+1}/${routesForTab.length}: ${route.id} (${route.name}), date=${route.date}, status=${route.status}, stops=${route.stops?.length || 0}`);
+
+                        if (route.stops && route.stops.length > 0) {
+                          routesWithStops++;
+                          totalStops += route.stops.length;
+                        }
+                      });
+
+                      console.log(`TripManagement: ${routesWithStops} routes have stops, total ${totalStops} stops`);
+
+                      return routesForTab;
+                    })()}
                     status={activeTab}
                     searchQuery={searchQuery}
                     dateRange={date}
@@ -665,6 +834,7 @@ const TripManagement = () => {
                     onCopyRoute={openCopyRouteDialog}
                     showPickupPoints={showPickupPoints}
                     showCheckpoints={showDropoffPoints}
+                    useSupabase={true}
                   />
                 )}
               </CardContent>

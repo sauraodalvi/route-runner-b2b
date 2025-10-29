@@ -750,7 +750,7 @@ const TripManagement = () => {
                     onCopyRoute={openCopyRouteDialog}
                     showPickupPoints={showPickupPoints}
                     showCheckpoints={showDropoffPoints}
-                    useSupabase={true}
+                    useSupabase={false}
                   />
                 )}
               </CardContent>

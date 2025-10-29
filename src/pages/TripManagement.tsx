@@ -124,11 +124,8 @@ const TripManagement = () => {
   // Navigation removed with map view
   const [showCreateRouteDialog, setShowCreateRouteDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("active");
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: addDays(new Date(), 7),
-  });
+  const [activeTab, setActiveTab] = useState("all");
+  const [date, setDate] = useState<DateRange | undefined>(undefined);
   const [showDateRangePicker, setShowDateRangePicker] = useState(false);
   const [routeToEdit, setRouteToEdit] = useState<any | null>(null);
   // Map view removed
@@ -149,97 +146,16 @@ const TripManagement = () => {
     setRefreshTrigger(prev => prev + 1);
   };
 
-  // Test Supabase connection and fetch routes
+  // Initialize with sample data immediately
   useEffect(() => {
-    const initializeSupabase = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Test connection to Supabase
-        const { success, error: connectionError } = await testSupabaseConnection();
-
-        if (!success) {
-          console.error('Failed to connect to Supabase:', connectionError);
-
-          // Create a more detailed error message
-          let errorMessage = 'Could not connect to Supabase. Using sample data instead.';
-          if (connectionError) {
-            errorMessage += ' Error: ' + (connectionError.message || JSON.stringify(connectionError));
-          }
-
-          setError(errorMessage);
-          toast({
-            title: "Connection Error",
-            description: errorMessage,
-            variant: "destructive"
-          });
-          setRoutes(mockRoutes);
-          setLoading(false);
-          return;
-        }
-
-        // Successfully connected to Supabase
-
-        // Check if required tables exist
-        const { allTablesExist, missingTables } = await checkRequiredTables();
-
-        if (!allTablesExist) {
-          console.error('Missing required tables:', missingTables);
-          setError(`Missing required tables: ${missingTables.join(', ')}. Using sample data instead.`);
-          toast({
-            title: "Missing Tables",
-            description: `Missing required tables: ${missingTables.join(', ')}. Using sample data instead.`,
-            variant: "destructive"
-          });
-          setRoutes(mockRoutes);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch routes from Supabase
-        const { data, error: routesError } = await getRoutes();
-
-        if (routesError) {
-          console.error('Error fetching routes:', routesError);
-          setError('Error fetching routes. Using sample data instead.');
-          toast({
-            title: "Data Error",
-            description: "Error fetching routes. Using sample data instead.",
-            variant: "destructive"
-          });
-          setRoutes(mockRoutes);
-        } else if (data && data.length > 0) {
-          console.log('Routes fetched from Supabase:', data);
-          setRoutes(data);
-          toast({
-            title: "Connected to Supabase",
-            description: `Successfully loaded ${data.length} routes from Supabase.`,
-          });
-        } else {
-          console.log('No routes found in Supabase. Using sample data.');
-          setRoutes(mockRoutes);
-          toast({
-            title: "No Data",
-            description: "No routes found in Supabase. Using sample data instead.",
-          });
-        }
-      } catch (err) {
-        console.error('Error initializing Supabase:', err);
-        setError('Error initializing Supabase. Using sample data instead.');
-        toast({
-          title: "Initialization Error",
-          description: "Error initializing Supabase. Using sample data instead.",
-          variant: "destructive"
-        });
-        setRoutes(mockRoutes);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initializeSupabase();
-  }, [refreshTrigger]); // Add refreshTrigger as a dependency to reload when it changes
+    console.log('Loading sample data with', mockRoutes.length, 'routes');
+    setRoutes(mockRoutes);
+    setLoading(false);
+    toast({
+      title: "Sample Data Loaded",
+      description: `Showing ${mockRoutes.length} sample routes for demonstration.`,
+    });
+  }, [refreshTrigger]);
 
   const filterRoutes = (query: string) => {
     setSearchQuery(query);

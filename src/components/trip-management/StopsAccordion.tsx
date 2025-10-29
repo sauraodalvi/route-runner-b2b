@@ -140,26 +140,30 @@ export const StopsAccordion = ({ stops = [] }: StopsAccordionProps) => {
                   )}
                 </TableCell>
                 <TableCell>
-                  {stop.samplesCollected > 0 ? (
+                  {stop.samplesCollected > 0 || stop.samplesRegistered > 0 || stop.samplesUnregistered > 0 ? (
                     <Button
                       variant="link"
                       className="p-0 h-auto font-medium text-primary hover:underline"
                       onClick={() => handleViewSamples(stop)}
                     >
-                      {stop.samplesCollected}
+                      <div className="text-left">
+                        <div className="text-xs text-muted-foreground">Reg: {stop.samplesRegistered || 0}</div>
+                        <div className="text-xs text-muted-foreground">Unreg: {stop.samplesUnregistered || 0}</div>
+                      </div>
                     </Button>
                   ) : (
                     <span className="text-muted-foreground">N/A</span>
                   )}
                 </TableCell>
                 <TableCell>
-                  {stop.attachments ? (
+                  {stop.attachments && stop.attachments !== "" ? (
                     <Button
                       variant="link"
-                      className="p-0 h-auto font-medium text-primary hover:underline"
+                      className="p-0 h-auto font-medium text-primary hover:underline flex items-center gap-1"
                       onClick={() => handleViewAttachments(stop)}
                     >
-                      View
+                      <Paperclip className="h-3 w-3" />
+                      {typeof stop.attachments === 'string' ? stop.attachments : 'View'}
                     </Button>
                   ) : (
                     <span className="text-muted-foreground">None</span>

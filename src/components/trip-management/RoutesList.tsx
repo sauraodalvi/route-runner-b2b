@@ -47,7 +47,8 @@ export const RoutesList = ({
   onViewDetails,
   onCopyRoute,
 }: RoutesListProps) => {
-  // No longer tracking expanded rows as we're removing the accordion
+  // Track expanded rows for accordion
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
   // Track attachments modal
   const [showAttachmentsModal, setShowAttachmentsModal] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
@@ -104,9 +105,12 @@ export const RoutesList = ({
     return new Date(b).getTime() - new Date(a).getTime();
   });
 
-  // View details directly instead of expanding rows
-  const viewDetails = (routeId: string) => {
-    onViewDetails(routeId);
+  // Toggle row expansion
+  const toggleRowExpansion = (routeId: string) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [routeId]: !prev[routeId]
+    }));
   };
 
   const openAttachmentsModal = (route: Route, e: React.MouseEvent) => {
@@ -165,82 +169,103 @@ export const RoutesList = ({
 
                 {/* Routes for this date */}
                 {routesByDate[dateStr].map((route) => (
-                  <TableRow
-                    key={route.id}
-                    className="hover:bg-gray-50/50 cursor-pointer"
-                    onClick={() => viewDetails(route.id)}
-                  >
-                    <TableCell className="font-medium">{route.tripId}</TableCell>
-                    <TableCell>{route.name}</TableCell>
-                    <TableCell>{route.startTime}</TableCell>
-                    <TableCell>
-                      <Badge
-                        className={`capitalize ${route.status === 'active' ? 'bg-blue-500 hover:bg-blue-600' :
-                                   route.status === 'pending' ? 'bg-purple-500 hover:bg-purple-600' :
-                                   route.status === 'upcoming' ? 'bg-amber-500 hover:bg-amber-600' :
-                                   route.status === 'completed' ? 'bg-green-500 hover:bg-green-600' :
-                                   route.status === 'cancelled' ? 'bg-red-500 hover:bg-red-600' : ''}`}
-                      >
-                        {route.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{route.assignedTeam}</TableCell>
-                    <TableCell className="text-center">{route.stopCount}</TableCell>
-                    <TableCell className="text-center">
-                      <span className="font-medium">{route.samplesCollected}</span>
-                    </TableCell>
-                    <TableCell>
-                      {route.attachments ? (
-                        <Button
-                          variant="link"
-                          className="p-0 h-auto font-medium text-primary hover:underline"
-                          onClick={(e) => openAttachmentsModal(route, e)}
+                  <React.Fragment key={route.id}>
+                    <TableRow
+                      className="hover:bg-gray-50/50 cursor-pointer"
+                      onClick={() => toggleRowExpansion(route.id)}
+                    >
+                      <TableCell className="font-medium">{route.tripId}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {expandedRows[route.id] ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          {route.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>{route.startTime}</TableCell>
+                      <TableCell>
+                        <Badge
+                          className={`capitalize ${route.status === 'active' ? 'bg-blue-500 hover:bg-blue-600' :
+                                     route.status === 'pending' ? 'bg-purple-500 hover:bg-purple-600' :
+                                     route.status === 'upcoming' ? 'bg-amber-500 hover:bg-amber-600' :
+                                     route.status === 'completed' ? 'bg-green-500 hover:bg-green-600' :
+                                     route.status === 'cancelled' ? 'bg-red-500 hover:bg-red-600' : ''}`}
                         >
-                          View
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                              <span className="sr-only">More</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              onViewDetails(route.id);
-                            }}>
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              onEditRoute(route);
-                            }}>
-                              Edit Route
-                            </DropdownMenuItem>
-                            {onCopyRoute && (
+                          {route.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{route.assignedTeam}</TableCell>
+                      <TableCell className="text-center">{route.stopCount}</TableCell>
+                      <TableCell className="text-center">
+                        <span className="font-medium">{route.samplesCollected}</span>
+                      </TableCell>
+                      <TableCell>
+                        {route.attachments ? (
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto font-medium text-primary hover:underline"
+                            onClick={(e) => openAttachmentsModal(route, e)}
+                          >
+                            View
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">More</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={(e) => {
                                 e.stopPropagation();
-                                onCopyRoute(route);
+                                onViewDetails(route.id);
                               }}>
-                                Copy Route
+                                View Details
                               </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                onEditRoute(route);
+                              }}>
+                                Edit Route
+                              </DropdownMenuItem>
+                              {onCopyRoute && (
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  onCopyRoute(route);
+                                }}>
+                                  Copy Route
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                    
+                    {/* Expanded stops accordion */}
+                    {expandedRows[route.id] && (
+                      <TableRow>
+                        <TableCell colSpan={9} className="p-0 bg-gray-50">
+                          <div className="p-4">
+                            <StopsAccordion stops={route.stops || []} />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </React.Fragment>
                 ))}
               </React.Fragment>
             ))

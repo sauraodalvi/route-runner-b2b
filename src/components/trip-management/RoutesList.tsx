@@ -255,7 +255,7 @@ export const RoutesList = ({
       </Table>
 
       {/* Attachments Modal with Sidebar */}
-      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal} className="max-w-6xl">
+      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal}>
         <DialogContent className="max-w-6xl w-[90vw] max-h-[80vh] p-0 overflow-hidden">
           <div className="flex h-[80vh]">
             {/* Left sidebar with attachment list */}

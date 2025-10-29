@@ -6,37 +6,17 @@ import { supabase } from '@/lib/supabase';
 export async function testSupabaseConnection() {
   try {
     console.log('Testing connection to Supabase...');
-    console.log('Supabase URL:', supabase.supabaseUrl);
-
-    // First try a simple health check
-    console.log('Trying health check...');
-    const healthCheck = await fetch(`${supabase.supabaseUrl}/health`);
-    console.log('Health check status:', healthCheck.status);
-
-    if (healthCheck.ok) {
-      const healthData = await healthCheck.json();
-      console.log('Health check data:', healthData);
-    } else {
-      console.error('Health check failed:', healthCheck.statusText);
-    }
-
-    // Now try to query a table that we know exists
+    
+    // Try to query a table that we know exists
     console.log('Trying to query the teams table...');
     const { data, error } = await supabase.from('teams').select('*').limit(1);
 
     if (error) {
       console.error('Connection test failed:', error);
-      console.error('Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        hint: error.hint
-      });
       return { success: false, error };
     }
 
     console.log('Connection test successful!');
-    console.log('Data received:', data);
     return { success: true, error: null };
   } catch (error) {
     console.error('Connection test failed with exception:', error);

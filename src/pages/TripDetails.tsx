@@ -36,7 +36,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -620,7 +621,7 @@ const TripDetails = () => {
       </AlertDialog>
 
       {/* Attachments Modal with Hierarchical Navigation */}
-      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal} className="max-w-6xl">
+      <Dialog open={showAttachmentsModal} onOpenChange={setShowAttachmentsModal}>
         <DialogContent className="max-w-6xl w-[90vw] max-h-[80vh] p-0 overflow-hidden">
           <div className="flex h-[80vh]">
             {/* Left sidebar with stops and attachment list */}
